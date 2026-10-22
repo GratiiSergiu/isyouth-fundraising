@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full bg-[#0b0c10]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISYouth Fundraising - Isus Salvatorul Youth</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            900: '#0b0c10',
+                            800: '#13151c',
+                            700: '#1c1f2b',
+                            600: '#282d3f',
+                        },
+                        brand: {
+                            pink: '#ec4899',
+                            purple: '#a855f7',
+                            violet: '#6366f1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .is-gradient-text {
+            background: linear-gradient(135deg, #f43f5e 0%, #d946ef 45%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .is-gradient-bg {
+            background: linear-gradient(135deg, #f43f5e 0%, #a855f7 50%, #6366f1 100%);
+        }
+        .glow-effect {
+            box-shadow: 0 0 25px -5px rgba(217, 70, 239, 0.35);
+        }
+        .card-glow:hover {
+            box-shadow: 0 0 30px -5px rgba(168, 85, 247, 0.25);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col text-slate-200 font-sans antialiased bg-[#0b0c10] selection:bg-fuchsia-600 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 backdrop-blur-xl bg-[#0b0c10]/85 border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- ISYouth Logo (Apasă de 3 ori rapid pentru autentificare admin) -->
+            <div class="flex items-center space-x-3 cursor-pointer select-none" onclick="handleLogoClick()" title="ISYouth - Apasă de 3 ori pentru administrare">
+                <div class="flex flex-col">
+                    <span class="text-3xl font-black tracking-tight leading-none">
+                        <span class="text-rose-500">IS</span><span class="is-gradient-text">Youth</span>
+                    </span>
+                    <span class="text-[10px] uppercase font-bold tracking-[0.25em] text-slate-400 mt-1">Isus Salvatorul Youth</span>
+                </div>
+            </div>
+
+            <!-- Admin Actions Bar (Ascuns implicit) -->
+            <div id="admin-actions-bar" class="hidden items-center space-x-2 sm:space-x-3">
+                <button onclick="openSyncModal()" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 bg-slate-800/80 hover:bg-slate-700 transition-colors border border-slate-700/60 flex items-center space-x-2">
+                    <i class="fa-solid fa-table-cells text-emerald-400"></i>
+                    <span class="hidden sm:inline">Google Sheets</span>
+                </button>
+
+                <button onclick="toggleAdminPanel()" id="admin-toggle-btn" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-slate-800 hover:bg-slate-700 transition-colors border border-purple-500/30 flex items-center space-x-2">
+                    <i class="fa-solid fa-sliders text-fuchsia-400"></i>
+                    <span>Administrare Site</span>
+                </button>
+
+                <button onclick="lockAdminMode()" title="Ieșire din mod Admin" class="p-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition-colors border border-rose-500/20">
+                    <i class="fa-solid fa-lock"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1">
+        <!-- Hero Section -->
+        <section class="relative pt-12 pb-16 overflow-hidden">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-fuchsia-900/20 via-indigo-900/10 to-transparent pointer-events-none blur-3xl -z-10"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+                <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-fuchsia-500/30 text-fuchsia-300 text-xs font-bold mb-6 shadow-lg shadow-fuchsia-950/40">
+                    <span class="flex h-2 w-2 rounded-full bg-fuchsia-400 animate-ping"></span>
+                    <span>Platforma Oficială de Fundraising ISYouth</span>
+                </div>
+
+                <h1 class="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tight max-w-5xl mx-auto leading-tight">
+                    Investim în generația <span class="is-gradient-text">ISYouth!</span>
+                </h1>
+                
+                <p class="mt-5 text-base sm:text-xl text-slate-300 max-w-2xl mx-auto font-normal leading-relaxed">
+                    Aici poți susține direct proiectele, echipamentele și spațiul comunității noastre de tineret. Fiecare contribuție face diferența!
+                </p>
+
+                <!-- Dashboard Stats Bar -->
+                <div class="mt-10 max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900/80 p-5 rounded-3xl border border-slate-800 shadow-2xl backdrop-blur-xl">
+                    <div class="p-3 text-center sm:border-r border-slate-800">
+                        <span class="text-[11px] uppercase tracking-wider font-bold text-slate-400">Total Strâns</span>
+                        <div class="text-2xl sm:text-3xl font-black text-white mt-1 is-gradient-text" id="stat-total">0 MDL</div>
+                        <span class="text-xs text-emerald-400 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-trend-up"></i> Actualizat live</span>
+                    </div>
+                    <div class="p-3 text-center sm:border-r border-slate-800">
+                        <span class="text-[11px] uppercase tracking-wider font-bold text-slate-400">Proiecte Active</span>
+                        <div class="text-2xl sm:text-3xl font-black text-fuchsia-400 mt-1" id="stat-active">0 Cauze</div>
+                        <span class="text-xs text-slate-400 font-medium mt-1 inline-block">Nevoie imediată</span>
+                    </div>
+                    <div class="p-3 text-center">
+                        <span class="text-[11px] uppercase tracking-wider font-bold text-slate-400">Proiecte Livrate</span>
+                        <div class="text-2xl sm:text-3xl font-black text-indigo-400 mt-1" id="stat-completed">0 Realizate</div>
+                        <span class="text-xs text-slate-400 font-medium mt-1 inline-block">Misiuni îndeplinite ✓</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADMIN EDIT CONTROL PANEL (Ascuns implicit) -->
+        <section id="admin-panel" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-8 space-y-8">
+            <!-- Panou Gestiune Proiecte -->
+            <div class="bg-slate-900 border-2 border-fuchsia-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2.5 py-0.5 rounded-md bg-fuchsia-500/20 text-fuchsia-300 font-bold text-xs uppercase">Panou Administrare Privat</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white mt-1">Gestiune Proiecte & Sume Colectate</h2>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openNewProjectModal()" class="px-4 py-2.5 bg-gradient-to-r from-fuchsia-600 to-indigo-600 hover:from-fuchsia-500 hover:to-indigo-500 font-bold text-white rounded-xl text-sm transition-all shadow-lg flex items-center space-x-2">
+                            <i class="fa-solid fa-plus-circle"></i>
+                            <span>Adaugă Proiect Nou</span>
+                        </button>
+                        <button onclick="resetToDefaults()" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">
+                            Resetare Proiecte
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Lista Proiectelor Modificabile</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-800/80 text-xs text-slate-400 uppercase">
+                                <tr>
+                                    <th class="p-3 rounded-l-xl">Imagine</th>
+                                    <th class="p-3">Titlu Proiect</th>
+                                    <th class="p-3">Țintă (MDL)</th>
+                                    <th class="p-3">Suma Colectată</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right rounded-r-xl">Acțiuni / Editare</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body" class="divide-y divide-slate-800/60">
+                                <!-- Generat dinamic -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panou Dinamic Editare Date de Contact & Link-uri Sociale -->
+            <div class="bg-slate-900 border-2 border-indigo-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div class="pb-4 border-b border-slate-800">
+                    <span class="px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 font-bold text-xs uppercase">Setări Dinamice Informații</span>
+                    <h2 class="text-2xl font-bold text-white mt-1">Gestiune Contacte, Telefoane & Link-uri</h2>
+                    <p class="text-slate-400 text-xs mt-1">Adaugă sau șterge oricâte numere de telefon și link-uri sociale dorești. Ele se vor actualiza automat pe site.</p>
+                </div>
+
+                <form onsubmit="saveContactSettings(event)" class="mt-6 space-y-6">
+                    
+                    <!-- Secțiune Numere de Telefon Dinamice -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                            <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                                <i class="fa-solid fa-phone mr-1"></i> Numere de Telefon (Cash / Contact)
+                            </h3>
+                            <button type="button" onclick="addPhoneInput()" class="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold rounded-lg border border-amber-500/30 flex items-center space-x-1">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span>Adaugă Număr Nou</span>
+                            </button>
+                        </div>
+                        <div id="admin-phones-container" class="space-y-2">
+                            <!-- Randuri generate dinamic -->
+                        </div>
+                    </div>
+
+                    <!-- Secțiune Link-uri Dinamice (Instagram, Telegram, Facebook, Web etc.) -->
+                    <div class="space-y-3 pt-2">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                            <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wider">
+                                <i class="fa-solid fa-link mr-1"></i> Link-uri & Rețele Sociale
+                            </h3>
+                            <button type="button" onclick="addLinkInput()" class="px-3 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 text-xs font-bold rounded-lg border border-sky-500/30 flex items-center space-x-1">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span>Adaugă Link Nou</span>
+                            </button>
+                        </div>
+                        <div id="admin-links-container" class="space-y-2">
+                            <!-- Randuri generate dinamic -->
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-800 flex justify-end">
+                        <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 font-bold text-white rounded-xl text-sm transition-all shadow-lg flex items-center space-x-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Salvează Toate Datele de Contact</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Active Projects Section -->
+        <section class="py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Proiecte În Curs de Fundraising</h2>
+                    <p class="text-slate-400 mt-1">Alege cauza din comunitatea ISYouth pe care dorești să o susții azi.</p>
+                </div>
+            </div>
+
+            <!-- Active Projects Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="active-projects-grid">
+                <!-- Generat dinamic -->
+            </div>
+        </section>
+
+        <!-- Completed Projects Section -->
+        <section class="py-16 bg-slate-900/50 border-t border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-12">
+                    <span class="px-3.5 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-bold text-xs uppercase tracking-wider rounded-full">Transparență & Impact</span>
+                    <h2 class="text-3xl font-extrabold text-white mt-3">Proiecte Livrate & Finalizate</h2>
+                    <p class="text-slate-400 mt-2">Datorită generozității tinerilor din comunitate, aceste obiecte au fost deja achiziționate!</p>
+                </div>
+
+                <!-- Completed Projects Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="completed-projects-grid">
+                    <!-- Generat dinamic -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800/80 py-12 text-center text-slate-500 text-sm">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col items-center">
+            <span class="text-2xl font-black text-white">IS<span class="is-gradient-text">Youth</span></span>
+            <p class="mt-2 text-slate-400 max-w-md">Platformă de Susținere Financiară a Comunității ISYouth - Isus Salvatorul Youth.</p>
+            
+            <!-- Date de Contact & Social Media Generat Dinamic -->
+            <div class="mt-6 flex flex-wrap justify-center items-center gap-3 text-xs font-semibold text-slate-300" id="display-footer-contacts">
+                <!-- Content generat dinamic din JS -->
+            </div>
+
+            <p class="text-xs text-slate-600 mt-8">© 2026 Toate drepturile rezervate. Isus Salvatorul Youth.</p>
+        </div>
+    </footer>
+
+    <!-- MODAL DONATE -->
+    <div id="modal-donate" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative">
+            <button onclick="closeDonateModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="text-center">
+                <div class="w-12 h-12 is-gradient-bg text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-fuchsia-500/20">
+                    <i class="fa-solid fa-heart text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white">Susține ISYouth</h3>
+                <p class="text-slate-400 text-sm mt-1">Cum poți contribui la acest proiect</p>
+            </div>
+
+            <div class="mt-6 space-y-4">
+                <div class="p-4 bg-slate-800/60 rounded-2xl border border-slate-700/60">
+                    <span class="text-xs uppercase font-bold tracking-wider text-fuchsia-400">Proiect Selectat</span>
+                    <p class="text-lg font-bold text-white mt-0.5" id="modal-project-title">Nume Proiect</p>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 flex items-start space-x-4">
+                        <div class="p-3 rounded-2xl bg-amber-500/20 text-amber-400 font-bold mt-0.5">
+                            <i class="fa-solid fa-hand-holding-dollar text-2xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-white text-base">Predare Personală / Cash</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                Poți înmâna suma direct coordonatorilor ISYouth la serile de tineret:
+                            </p>
+                            
+                            <!-- Lista Dinamică de telefoane în modal -->
+                            <div class="mt-3 space-y-2" id="modal-phones-list">
+                                <!-- Generat dinamic -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Canale de Comunicare în Modal -->
+                    <div class="p-4 rounded-2xl border border-slate-800 bg-slate-950/60 space-y-2">
+                        <span class="text-[11px] uppercase font-bold text-slate-400 tracking-wider block">Urmărește-ne & Contactează-ne:</span>
+                        <div class="grid grid-cols-2 gap-2" id="modal-links-grid">
+                            <!-- Generat dinamic -->
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="closeDonateModal()" class="w-full py-3.5 is-gradient-bg text-white rounded-xl font-bold hover:opacity-90 transition-opacity shadow-lg">
+                    Am înțeles, mulțumesc!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT / ADD PROJECT (ADMIN) -->
+    <div id="modal-edit-project" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeEditModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="text-2xl font-bold text-white" id="edit-modal-title">Editare Proiect</h3>
+            <p class="text-slate-400 text-xs mt-1">Completează datele proiectului.</p>
+
+            <form id="edit-project-form" onsubmit="saveProjectForm(event)" class="mt-6 space-y-4">
+                <input type="hidden" id="edit-project-id">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Titlu Proiect</label>
+                    <input type="text" id="edit-title" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Descriere Motivațională</label>
+                    <textarea id="edit-description" rows="3" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Țintă (MDL)</label>
+                        <input type="number" id="edit-target" required min="100" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none font-bold text-emerald-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Suma Strânsă (MDL)</label>
+                        <input type="number" id="edit-raised" required min="0" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none font-bold text-fuchsia-400">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Categorie</label>
+                        <input type="text" id="edit-category" placeholder="ex. Mobilier, Cafea, Audio" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Status Proiect</label>
+                        <select id="edit-status" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none">
+                            <option value="active">În Curs (Activ)</option>
+                            <option value="completed">Livrat / Finalizat</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">URL Imagine Representativă</label>
+                    <input type="text" id="edit-image" placeholder="https://..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none">
+                </div>
+
+                <div class="pt-3 flex space-x-3">
+                    <button type="button" onclick="closeEditModal()" class="w-1/3 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold text-sm">Anulează</button>
+                    <button type="submit" class="w-2/3 py-3 is-gradient-bg text-white rounded-xl font-bold text-sm shadow-lg">Salvează Modificările</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL GOOGLE SHEETS -->
+    <div id="modal-sync" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative">
+            <button onclick="closeSyncModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center space-x-3 text-emerald-400 mb-2">
+                <i class="fa-solid fa-file-excel text-3xl"></i>
+                <h3 class="text-2xl font-bold text-white">Google Sheets Integration</h3>
+            </div>
+            <p class="text-slate-400 text-xs">Puteți păstra evidența internă a donatorilor într-un tabel Google separat.</p>
+
+            <div class="mt-5 p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+                <span class="text-xs font-bold text-slate-400 uppercase">Cum funcționează sincronizarea:</span>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    1. Notați donațiile individuale în Google Sheet (Nume, Dată, Sumă, Proiect).<br>
+                    2. Puteți introduce un Apps Script Endpoint URL mai jos pentru a trage datele automat.
+                </p>
+                <input type="text" id="sheet-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white">
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeSyncModal()" class="px-5 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-bold">Închide</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-msg" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-fuchsia-500/50 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300">
+        <i class="fa-solid fa-circle-check text-fuchsia-400 text-xl"></i>
+        <span id="toast-text" class="text-sm font-semibold">Salvat cu succes!</span>
+    </div>
+
+    <!-- LOGICA APLICAȚIEI -->
+    <script>
+        const defaultProjects = [
+            {
+                id: "lavoar",
+                title: "Dulap cu lavoar spațiu sanitar",
+                description: "Amenajarea zonei sanitare cu un dulap modern și lavoar nou pentru igienă și un spațiu curat la fiecare întâlnire ISYouth.",
+                target: 2800,
+                raised: 2100,
+                lastDonation: "22 Octombrie 2026",
+                image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80",
+                status: "active",
+                category: "Igienă & Confort"
+            },
+            {
+                id: "cafea",
+                title: "Aparat de cafea nou",
+                description: "Achiziționarea unui espressor automat pentru momente de părtășie, energie și comunitate înainte și după întâlnirile de tineret.",
+                target: 4500,
+                raised: 1800,
+                lastDonation: "22 Octombrie 2026",
+                image: "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=600&q=80",
+                status: "active",
+                category: "Părtășie"
+            },
+            {
+                id: "canapea",
+                title: "Canapea sală tineret",
+                description: "O canapea confortabilă și durabilă pentru discuții de grup, relaxare, jocuri de societate și crearea unei atmosfere primitoare.",
+                target: 7000,
+                raised: 6300,
+                lastDonation: "19 Octombrie 2026",
+                image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80",
+                status: "active",
+                category: "Mobilier"
+            },
+            {
+                id: "jocuri",
+                title: "Set Jocuri & Tenis de Masă",
+                description: "Proiect livrat cu succes! Tinerii se bucură deja de masa de tenis și jocurile de societate în sală.",
+                target: 3500,
+                raised: 3500,
+                lastDonation: "10 Septembrie 2026",
+                image: "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80",
+                status: "completed",
+                category: "Recreere"
+            }
+        ];
+
+        const defaultContacts = {
+            phones: [
+                { name: "Dumitru Malic", number: "0692 13 926" }
+            ],
+            links: [
+                { name: "Instagram ISYouth", url: "https://www.instagram.com/isyouth.md?srtk=MWltbW9qaXp4ZWE0Zg==", type: "instagram" },
+                { name: "Canal Telegram", url: "https://t.me/+d4X06CKWUsQzM2Yy", type: "telegram" }
+            ]
+        };
+
+        let projects = [];
+        let contactInfo = { ...defaultContacts };
+        let isAdminAuthorized = false;
+        let logoClickCounter = 0;
+        let logoClickTimer = null;
+
+        window.onload = function() {
+            // Încărcare proiecte
+            const savedProjects = localStorage.getItem('isyouth_projects');
+            if (savedProjects) {
+                try {
+                    projects = JSON.parse(savedProjects);
+                } catch(e) {
+                    projects = [...defaultProjects];
+                }
+            } else {
+                projects = [...defaultProjects];
+            }
+
+            // Încărcare date contact dinamic
+            const savedContacts = localStorage.getItem('isyouth_contacts');
+            if (savedContacts) {
+                try {
+                    contactInfo = JSON.parse(savedContacts);
+                    // Migrare automata de la structura veche fixă dacă e cazul
+                    if(!contactInfo.phones) {
+                        contactInfo = {
+                            phones: [{ name: contactInfo.name || "Coordonator", number: contactInfo.phone || "0692 13 926" }],
+                            links: [
+                                { name: "Instagram ISYouth", url: contactInfo.instagram || "", type: "instagram" },
+                                { name: "Canal Telegram", url: contactInfo.telegram || "", type: "telegram" }
+                            ]
+                        };
+                    }
+                } catch(e) {
+                    contactInfo = JSON.parse(JSON.stringify(defaultContacts));
+                }
+            } else {
+                contactInfo = JSON.parse(JSON.stringify(defaultContacts));
+            }
+
+            checkAdminAuth();
+            renderApp();
+            renderContactsUI();
+        };
+
+        function renderContactsUI() {
+            renderAdminContactInputs();
+            renderModalContacts();
+            renderFooterContacts();
+        }
+
+        // Render Admin Panel Inputs
+        function renderAdminContactInputs() {
+            const phonesContainer = document.getElementById('admin-phones-container');
+            const linksContainer = document.getElementById('admin-links-container');
+            
+            phonesContainer.innerHTML = '';
+            linksContainer.innerHTML = '';
+
+            // Telefoane
+            contactInfo.phones.forEach((p, idx) => {
+                const row = document.createElement('div');
+                row.className = "flex items-center space-x-2";
+                row.innerHTML = `
+                    <input type="text" placeholder="Nume Persoană (ex. Dumitru)" value="${p.name}" class="phone-name w-1/2 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-amber-500 focus:outline-none">
+                    <input type="text" placeholder="Telefon (ex. 0692 13 926)" value="${p.number}" class="phone-num w-1/2 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-amber-500 focus:outline-none">
+                    <button type="button" onclick="removePhoneInput(${idx})" class="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 rounded-xl text-xs border border-rose-500/20">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                phonesContainer.appendChild(row);
+            });
+
+            // Link-uri
+            contactInfo.links.forEach((l, idx) => {
+                const row = document.createElement('div');
+                row.className = "flex items-center space-x-2";
+                row.innerHTML = `
+                    <input type="text" placeholder="Nume Link (ex. Facebook)" value="${l.name}" class="link-name w-1/3 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-sky-500 focus:outline-none">
+                    <input type="text" placeholder="https://..." value="${l.url}" class="link-url w-1/2 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-sky-500 focus:outline-none">
+                    <select class="link-type w-1/4 px-2 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-sky-500 focus:outline-none">
+                        <option value="instagram" ${l.type === 'instagram' ? 'selected' : ''}>Instagram</option>
+                        <option value="telegram" ${l.type === 'telegram' ? 'selected' : ''}>Telegram</option>
+                        <option value="facebook" ${l.type === 'facebook' ? 'selected' : ''}>Facebook</option>
+                        <option value="globe" ${l.type === 'globe' ? 'selected' : ''}>Website / Altul</option>
+                    </select>
+                    <button type="button" onclick="removeLinkInput(${idx})" class="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 rounded-xl text-xs border border-rose-500/20">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                linksContainer.appendChild(row);
+            });
+        }
+
+        function addPhoneInput() {
+            contactInfo.phones.push({ name: "", number: "" });
+            renderAdminContactInputs();
+        }
+
+        function removePhoneInput(idx) {
+            contactInfo.phones.splice(idx, 1);
+            renderAdminContactInputs();
+        }
+
+        function addLinkInput() {
+            contactInfo.links.push({ name: "Link Nou", url: "", type: "globe" });
+            renderAdminContactInputs();
+        }
+
+        function removeLinkInput(idx) {
+            contactInfo.links.splice(idx, 1);
+            renderAdminContactInputs();
+        }
+
+        function saveContactSettings(e) {
+            e.preventDefault();
+            
+            // Colecteaza telefoane
+            const phoneNames = document.querySelectorAll('.phone-name');
+            const phoneNums = document.querySelectorAll('.phone-num');
+            const newPhones = [];
+            phoneNames.forEach((el, i) => {
+                if(el.value.trim() || phoneNums[i].value.trim()) {
+                    newPhones.push({
+                        name: el.value.trim(),
+                        number: phoneNums[i].value.trim()
+                    });
+                }
+            });
+
+            // Colecteaza link-uri
+            const linkNames = document.querySelectorAll('.link-name');
+            const linkUrls = document.querySelectorAll('.link-url');
+            const linkTypes = document.querySelectorAll('.link-type');
+            const newLinks = [];
+            linkNames.forEach((el, i) => {
+                if(el.value.trim() || linkUrls[i].value.trim()) {
+                    newLinks.push({
+                        name: el.value.trim(),
+                        url: linkUrls[i].value.trim(),
+                        type: linkTypes[i].value
+                    });
+                }
+            });
+
+            contactInfo = { phones: newPhones, links: newLinks };
+            localStorage.setItem('isyouth_contacts', JSON.stringify(contactInfo));
+            renderContactsUI();
+            showToast("Toate informațiile de contact au fost salvate!");
+        }
+
+        // Render Contacts inside Modal
+        function renderModalContacts() {
+            const phonesContainer = document.getElementById('modal-phones-list');
+            const linksContainer = document.getElementById('modal-links-grid');
+
+            phonesContainer.innerHTML = '';
+            linksContainer.innerHTML = '';
+
+            contactInfo.phones.forEach(p => {
+                const cleanPhone = p.number.replace(/\s+/g, '');
+                const div = document.createElement('div');
+                div.className = "inline-flex items-center space-x-2 text-xs font-bold text-amber-400 bg-amber-950/60 px-3 py-1.5 rounded-lg border border-amber-500/20 mr-2 mb-1";
+                div.innerHTML = `
+                    <i class="fa-solid fa-phone"></i>
+                    <span>${p.name}:</span>
+                    <a href="tel:${cleanPhone}" class="hover:underline text-amber-300">${p.number}</a>
+                `;
+                phonesContainer.appendChild(div);
+            });
+
+            contactInfo.links.forEach(l => {
+                let iconClass = "fa-solid fa-globe";
+                let colorClass = "text-fuchsia-400";
+                if(l.type === 'instagram') { iconClass = "fa-brands fa-instagram"; colorClass = "text-pink-400"; }
+                if(l.type === 'telegram') { iconClass = "fa-brands fa-telegram"; colorClass = "text-sky-400"; }
+                if(l.type === 'facebook') { iconClass = "fa-brands fa-facebook"; colorClass = "text-blue-400"; }
+
+                const a = document.createElement('a');
+                a.href = l.url || "#";
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+                a.className = `p-2.5 bg-slate-900 hover:bg-slate-800 rounded-xl text-xs font-bold ${colorClass} border border-slate-800 flex items-center space-x-2 justify-center`;
+                a.innerHTML = `<i class="${iconClass} text-base"></i><span>${l.name}</span>`;
+                linksContainer.appendChild(a);
+            });
+        }
+
+        // Render Contacts inside Footer
+        function renderFooterContacts() {
+            const footerContainer = document.getElementById('display-footer-contacts');
+            footerContainer.innerHTML = '';
+
+            contactInfo.phones.forEach(p => {
+                const cleanPhone = p.number.replace(/\s+/g, '');
+                const a = document.createElement('a');
+                a.href = `tel:${cleanPhone}`;
+                a.className = "px-4 py-2 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 transition-colors flex items-center space-x-2";
+                a.innerHTML = `<i class="fa-solid fa-phone text-emerald-400"></i><span>${p.name}: ${p.number}</span>`;
+                footerContainer.appendChild(a);
+            });
+
+            contactInfo.links.forEach(l => {
+                let iconClass = "fa-solid fa-globe";
+                let colorClass = "text-indigo-400 border-indigo-500/20 bg-indigo-500/10";
+                if(l.type === 'instagram') { iconClass = "fa-brands fa-instagram"; colorClass = "text-pink-400 border-pink-500/20 bg-pink-500/10"; }
+                if(l.type === 'telegram') { iconClass = "fa-brands fa-telegram"; colorClass = "text-sky-400 border-sky-500/20 bg-sky-500/10"; }
+                if(l.type === 'facebook') { iconClass = "fa-brands fa-facebook"; colorClass = "text-blue-400 border-blue-500/20 bg-blue-500/10"; }
+
+                const a = document.createElement('a');
+                a.href = l.url || "#";
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+                a.className = `px-4 py-2 rounded-xl border ${colorClass} transition-colors flex items-center space-x-2`;
+                a.innerHTML = `<i class="${iconClass} text-lg"></i><span>${l.name}</span>`;
+                footerContainer.appendChild(a);
+            });
+        }
+
+        function checkAdminAuth() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const adminParam = urlParams.get('admin');
+            const sessionAdmin = sessionStorage.getItem('isyouth_admin_active');
+
+            if (adminParam === '1' || adminParam === 'isyouth' || adminParam === 'true' || sessionAdmin === 'true') {
+                enableAdminMode();
+            } else {
+                disableAdminMode();
+            }
+        }
+
+        function enableAdminMode() {
+            isAdminAuthorized = true;
+            sessionStorage.setItem('isyouth_admin_active', 'true');
+            const bar = document.getElementById('admin-actions-bar');
+            if (bar) {
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
+            }
+        }
+
+        function disableAdminMode() {
+            isAdminAuthorized = false;
+            sessionStorage.removeItem('isyouth_admin_active');
+            const bar = document.getElementById('admin-actions-bar');
+            if (bar) {
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
+            }
+            const panel = document.getElementById('admin-panel');
+            if (panel) panel.classList.add('hidden');
+        }
+
+        function lockAdminMode() {
+            disableAdminMode();
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.pushState({path: cleanUrl}, '', cleanUrl);
+            showToast("Modul administrare a fost închis.");
+        }
+
+        function handleLogoClick() {
+            logoClickCounter++;
+            clearTimeout(logoClickTimer);
+            
+            if (logoClickCounter >= 3) {
+                logoClickCounter = 0;
+                if (!isAdminAuthorized) {
+                    const pass = prompt("Introduceți parola de administrare ISYouth:");
+                    if (pass === "isyouth2026" || pass === "admin") {
+                        enableAdminMode();
+                        showToast("Autentificare reușită! Mod Admin activat.");
+                        toggleAdminPanel();
+                    } else if (pass !== null) {
+                        alert("Parolă incorectă!");
+                    }
+                } else {
+                    toggleAdminPanel();
+                }
+            } else {
+                logoClickTimer = setTimeout(() => {
+                    logoClickCounter = 0;
+                }, 1000);
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('isyouth_projects', JSON.stringify(projects));
+            renderApp();
+        }
+
+        function resetToDefaults() {
+            if (confirm("Sigur dorești să resetezi proiectele la cele inițiale?")) {
+                projects = [...defaultProjects];
+                saveState();
+                showToast("Proiectele au fost resetate!");
+            }
+        }
+
+        function renderApp() {
+            const activeContainer = document.getElementById('active-projects-grid');
+            const completedContainer = document.getElementById('completed-projects-grid');
+            const adminTableBody = document.getElementById('admin-table-body');
+
+            activeContainer.innerHTML = '';
+            completedContainer.innerHTML = '';
+            adminTableBody.innerHTML = '';
+
+            let totalRaisedAll = 0;
+            let activeCount = 0;
+            let completedCount = 0;
+
+            projects.forEach((project, index) => {
+                totalRaisedAll += Number(project.raised);
+                const percent = Math.min(100, Math.round((project.raised / project.target) * 100));
+
+                if (project.status === 'active') {
+                    activeCount++;
+                    activeContainer.appendChild(createActiveProjectCard(project, percent));
+                } else {
+                    completedCount++;
+                    completedContainer.appendChild(createCompletedProjectCard(project));
+                }
+
+                adminTableBody.appendChild(createAdminRow(project, index));
+            });
+
+            document.getElementById('stat-total').innerText = `${totalRaisedAll.toLocaleString('ro-RO')} MDL`;
+            document.getElementById('stat-active').innerText = `${activeCount} Cauze`;
+            document.getElementById('stat-completed').innerText = `${completedCount} Realizate`;
+        }
+
+        function createActiveProjectCard(project, percent) {
+            const card = document.createElement('div');
+            card.className = "bg-slate-900/90 rounded-3xl overflow-hidden border border-slate-800 shadow-xl flex flex-col card-glow transition-all duration-300 group";
+
+            card.innerHTML = `
+                <div class="relative h-48 overflow-hidden bg-slate-950">
+                    <img src="${project.image}" alt="${project.title}" onerror="this.src='https://placehold.co/600x400/1e293b/ffffff?text=ISYouth'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                    <div class="absolute top-4 left-4">
+                        <span class="px-3 py-1 bg-slate-950/80 backdrop-blur-md text-slate-300 text-xs font-bold rounded-full border border-slate-700">
+                            ${project.category}
+                        </span>
+                    </div>
+                    <div class="absolute top-4 right-4">
+                        <span class="px-3 py-1 is-gradient-bg text-white text-xs font-black rounded-full shadow-lg">
+                            ${percent}%
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-white group-hover:text-fuchsia-400 transition-colors leading-snug">${project.title}</h3>
+                        <p class="text-slate-400 text-sm mt-2.5 line-clamp-3 leading-relaxed">${project.description}</p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-800">
+                        <div class="flex justify-between text-xs font-bold mb-2">
+                            <span class="text-fuchsia-400">${project.raised.toLocaleString('ro-RO')} MDL <span class="text-slate-500 font-normal">strânși</span></span>
+                            <span class="text-slate-400">Țintă: ${project.target.toLocaleString('ro-RO')} MDL</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-3 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                            <div class="is-gradient-bg h-full rounded-full transition-all duration-700 ease-out glow-effect" style="width: ${percent}%"></div>
+                        </div>
+
+                        <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+                            <span><i class="fa-regular fa-calendar mr-1"></i> Ultima donație: <strong class="text-slate-300">${project.lastDonation}</strong></span>
+                        </div>
+
+                        <button onclick="openDonateModal('${project.id}')" class="mt-5 w-full py-3 px-4 rounded-xl font-bold text-sm bg-slate-800 hover:bg-fuchsia-600 text-white transition-all duration-200 flex items-center justify-center space-x-2 border border-slate-700/60 shadow-lg">
+                            <i class="fa-solid fa-heart text-rose-500"></i>
+                            <span>Susține Acest Proiect</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function createCompletedProjectCard(project) {
+            const card = document.createElement('div');
+            card.className = "bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-lg flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 items-center";
+
+            card.innerHTML = `
+                <div class="w-full sm:w-32 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-slate-950 relative">
+                    <img src="${project.image}" alt="${project.title}" onerror="this.src='https://placehold.co/400x300/1e293b/ffffff?text=Realizat'" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-indigo-950/40"></div>
+                    <span class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">✓ LIVRAT</span>
+                </div>
+                <div class="flex-1 w-full">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">${project.category}</span>
+                        <span class="text-xs text-slate-500">100% Finalizat</span>
+                    </div>
+                    <h4 class="font-bold text-white text-base mt-0.5">${project.title}</h4>
+                    <p class="text-xs text-slate-400 mt-1 line-clamp-2">${project.description}</p>
+                    <div class="mt-3 flex items-center justify-between text-xs font-semibold text-slate-300 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                        <span>Total Colectat: ${project.raised.toLocaleString('ro-RO')} MDL</span>
+                        <span class="text-emerald-400 font-bold">Completat ✓</span>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function createAdminRow(project, index) {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-800/40";
+            tr.innerHTML = `
+                <td class="p-3">
+                    <img src="${project.image}" class="w-10 h-10 rounded-lg object-cover bg-slate-800">
+                </td>
+                <td class="p-3 font-bold text-white">${project.title}</td>
+                <td class="p-3 text-emerald-400 font-bold">${project.target} MDL</td>
+                <td class="p-3 text-fuchsia-400 font-bold">${project.raised} MDL</td>
+                <td class="p-3">
+                    <span class="px-2 py-1 text-xs font-bold rounded-full ${project.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'}">
+                        ${project.status === 'active' ? 'Activ' : 'Livrat'}
+                    </span>
+                </td>
+                <td class="p-3 text-right space-x-2">
+                    <button onclick="editProjectModal('${project.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg border border-slate-700">
+                        <i class="fa-solid fa-pen mr-1"></i> Editează
+                    </button>
+                    <button onclick="deleteProject('${project.id}')" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-lg border border-rose-500/30">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            return tr;
+        }
+
+        function toggleAdminPanel() {
+            const panel = document.getElementById('admin-panel');
+            panel.classList.toggle('hidden');
+            if(!panel.classList.contains('hidden')) {
+                panel.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function editProjectModal(id) {
+            const proj = projects.find(p => p.id === id);
+            if (!proj) return;
+
+            document.getElementById('edit-modal-title').innerText = "Editare Proiect: " + proj.title;
+            document.getElementById('edit-project-id').value = proj.id;
+            document.getElementById('edit-title').value = proj.title;
+            document.getElementById('edit-description').value = proj.description;
+            document.getElementById('edit-target').value = proj.target;
+            document.getElementById('edit-raised').value = proj.raised;
+            document.getElementById('edit-category').value = proj.category || 'General';
+            document.getElementById('edit-status').value = proj.status;
+            document.getElementById('edit-image').value = proj.image;
+
+            document.getElementById('modal-edit-project').classList.remove('hidden');
+        }
+
+        function openNewProjectModal() {
+            document.getElementById('edit-modal-title').innerText = "Adaugă Proiect Nou ISYouth";
+            document.getElementById('edit-project-id').value = "new_" + Date.now();
+            document.getElementById('edit-project-form').reset();
+            document.getElementById('edit-target').value = 3000;
+            document.getElementById('edit-raised').value = 0;
+            document.getElementById('edit-category').value = "ISYouth";
+            document.getElementById('edit-status').value = "active";
+            document.getElementById('edit-image').value = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80";
+
+            document.getElementById('modal-edit-project').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('modal-edit-project').classList.add('hidden');
+        }
+
+        function saveProjectForm(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-project-id').value;
+            const title = document.getElementById('edit-title').value;
+            const description = document.getElementById('edit-description').value;
+            const target = Number(document.getElementById('edit-target').value);
+            const raised = Number(document.getElementById('edit-raised').value);
+            const category = document.getElementById('edit-category').value;
+            const status = document.getElementById('edit-status').value;
+            const image = document.getElementById('edit-image').value;
+
+            const existingIndex = projects.findIndex(p => p.id === id);
+            const today = new Date().toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            if (existingIndex !== -1) {
+                projects[existingIndex] = {
+                    ...projects[existingIndex],
+                    title, description, target, raised, category, status, image,
+                    lastDonation: raised > projects[existingIndex].raised ? today : projects[existingIndex].lastDonation
+                };
+            } else {
+                projects.unshift({
+                    id, title, description, target, raised, category, status, image,
+                    lastDonation: today
+                });
+            }
+
+            saveState();
+            closeEditModal();
+            showToast("Proiect salvat cu succes!");
+        }
+
+        function deleteProject(id) {
+            if (confirm("Sigur dorești să ștergi acest proiect?")) {
+                projects = projects.filter(p => p.id !== id);
+                saveState();
+                showToast("Proiect șters!");
+            }
+        }
+
+        function openDonateModal(id) {
+            const proj = projects.find(p => p.id === id);
+            if (proj) {
+                document.getElementById('modal-project-title').innerText = proj.title;
+            }
+            document.getElementById('modal-donate').classList.remove('hidden');
+        }
+
+        function closeDonateModal() {
+            document.getElementById('modal-donate').classList.add('hidden');
+        }
+
+        function openSyncModal() {
+            document.getElementById('modal-sync').classList.remove('hidden');
+        }
+
+        function closeSyncModal() {
+            document.getElementById('modal-sync').classList.add('hidden');
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast-msg');
+            document.getElementById('toast-text').innerText = text;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
