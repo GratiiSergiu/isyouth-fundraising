@@ -9,7 +9,7 @@ function setupSheets() {
     'Data înregistrării',
     'ID proiect',
     'Sumă (MDL)',
-    'Nume donator (opțional)',
+    'Nume donator',
     'Status',
     'Notă internă (opțional)'
   ]);
@@ -64,8 +64,9 @@ function onEdit(event) {
   const recordedAtColumn = headers.indexOf('data inregistrarii');
   const projectIdColumn = headers.indexOf('id proiect');
   const amountColumn = headers.indexOf('suma mdl');
+  const donorNameColumn = headers.indexOf('nume donator');
   const statusColumn = headers.indexOf('status');
-  if ([donationDateColumn, recordedAtColumn, projectIdColumn, amountColumn, statusColumn].some(column => column < 0)) {
+  if ([donationDateColumn, recordedAtColumn, projectIdColumn, amountColumn, donorNameColumn, statusColumn].some(column => column < 0)) {
     throw new Error('The Donații sheet headers are invalid.');
   }
 
@@ -79,7 +80,8 @@ function onEdit(event) {
       String(row[projectIdColumn] || '').trim() &&
       Number.isFinite(Number(row[amountColumn])) &&
       Number(row[amountColumn]) > 0 &&
-      (status === 'confirmata' || status === 'confirmed');
+    String(row[donorNameColumn] || '').trim() &&
+    (status === 'confirmata' || status === 'confirmed');
 
     if (!currentTimestamp && donationIsComplete) {
       changed = true;

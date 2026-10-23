@@ -20,7 +20,7 @@ Registrul cu înregistrări individuale rămâne privat. Site-ul cere endpointul
 
 Fila `Proiecte` are coloanele `ID proiect`, `Nume proiect`, `Sold inițial (MDL)`. Adaugă câte un rând pentru fiecare proiect și soldul cu care începe evidența în Sheet. Numele ajută la identificarea rândului în registrul intern; denumirea și ținta afișate vizitatorilor rămân administrate pe site.
 
-Fila `Donații` are coloanele `Data donației`, `Data înregistrării`, `ID proiect`, `Sumă (MDL)`, `Nume donator (opțional)`, `Status`, `Notă internă (opțional)`. Pentru fiecare donație cash, completează data primirii, proiectul, suma și statusul `Confirmată`; data înregistrării se completează automat când rândul este complet și confirmat. Numele donatorului și nota sunt opționale și rămân doar în foaia privată. Dacă o înregistrare este greșită, schimbă statusul în `Anulată`; aceasta nu intră în total și păstrează istoricul.
+Fila `Donații` are coloanele `Data donației`, `Data înregistrării`, `ID proiect`, `Sumă (MDL)`, `Nume donator`, `Status`, `Notă internă (opțional)`. Pentru fiecare donație cash, completează data primirii, proiectul, suma, numele donatorului și statusul `Confirmată`; data înregistrării se completează automat când rândul este complet și confirmat. Numele donatorului și nota rămân doar în foaia privată. Dacă o înregistrare este greșită, schimbă statusul în `Anulată`; aceasta nu intră în total și păstrează istoricul.
 
 ID-urile trebuie să coincidă cu ID-urile proiectelor din site (de exemplu `lavoar`, `cafea`, `canapea`, `jocuri`), iar fila `Proiecte` trebuie să conțină toate proiectele afișate pe site. Sumele sunt numere MDL, fără text sau monedă în celulă. Nu adăuga numele donatorilor dacă nu sunt necesare pentru evidența voastră internă.
 
