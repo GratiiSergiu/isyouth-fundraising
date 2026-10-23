@@ -1,18 +1,18 @@
 const dailyVerses = [
     {
-        text: 'Fiecare să dea după cum a hotărât în inima lui: nu cu părere de rău sau de silă, căci „pe cine dă cu bucurie îl iubește Dumnezeu.”',
+        text: 'Fiecare să dea după cum a hotărît în inima lui: nu cu părere de rău, sau de silă, căci „pe cine dă cu bucurie, îl iubește Dumnezeu.“',
         reference: '2 Corinteni 9:7',
     },
     {
-        text: 'Dați, și vi se va da; ba încă, vi se va turna în sân o măsură bună, îndesată, clătinată, care se va vărsa pe deasupra. Căci cu ce măsură veți măsura, cu aceea vi se va măsura.',
+        text: 'Dați, și vi se va da; ba încă, vi se va turna în sîn o măsură bună, îndesată, clătinată, care se va vărsa pe deasupra. Căci cu ce măsură veți măsura, cu aceea vi se va măsura.“',
         reference: 'Luca 6:38',
     },
     {
-        text: 'În chipul acesta veți fi îmbogățiți în toate privințele pentru orice dărnicie, care, prin noi, va face să se aducă mulțumiri lui Dumnezeu.',
+        text: 'În chipul acesta veți fi îmbogățiți în toate privințele, pentru orice dărnicie, care, prin noi, va face să se aducă mulțămiri lui Dumnezeu.',
         reference: '2 Corinteni 9:11',
     },
     {
-        text: 'Să știți: cine seamănă puțin, puțin va secera; iar cine seamănă mult, mult va secera.',
+        text: 'Să știți: cine samănă puțin, puțin va secera; iar cine samănă mult, mult va secera.',
         reference: '2 Corinteni 9:6',
     },
 ];
