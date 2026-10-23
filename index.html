@@ -169,6 +169,7 @@
                                 <tr>
                                     <th class="p-3 rounded-l-xl">Imagine</th>
                                     <th class="p-3">Titlu Proiect</th>
+                                    <th class="p-3">ID Proiect</th>
                                     <th class="p-3">Țintă (MDL)</th>
                                     <th class="p-3">Suma Colectată</th>
                                     <th class="p-3">Status</th>
@@ -368,6 +369,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Suma Strânsă (MDL)</label>
                         <input type="number" id="edit-raised" required min="0" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none font-bold text-fuchsia-400">
+                        <p id="edit-raised-help" class="hidden text-xs text-slate-500 mt-1">Suma este preluată din Google Sheets și nu se editează aici.</p>
                     </div>
                 </div>
 
@@ -409,18 +411,20 @@
                 <i class="fa-solid fa-file-excel text-3xl"></i>
                 <h3 class="text-2xl font-bold text-white">Google Sheets Integration</h3>
             </div>
-            <p class="text-slate-400 text-xs">Puteți păstra evidența internă a donatorilor într-un tabel Google separat.</p>
+            <p class="text-slate-400 text-xs">Registrul de donații rămâne privat în Google Sheets. Site-ul primește și afișează doar totalurile pe proiect.</p>
 
             <div class="mt-5 p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
-                <span class="text-xs font-bold text-slate-400 uppercase">Cum funcționează sincronizarea:</span>
+                <label for="sheet-url-input" class="text-xs font-bold text-slate-400 uppercase">URL aplicație web Google Apps Script</label>
                 <p class="text-xs text-slate-300 leading-relaxed">
-                    1. Notați donațiile individuale în Google Sheet (Nume, Dată, Sumă, Proiect).<br>
-                    2. Puteți introduce un Apps Script Endpoint URL mai jos pentru a trage datele automat.
+                    Introdu URL-ul endpointului Apps Script publicat. Se sincronizează totalurile de pe foile „Proiecte” și „Donații”; nu se transmit numele donatorilor sau notele interne.
                 </p>
-                <input type="text" id="sheet-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white">
+                <input type="url" id="sheet-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white">
+                <div id="sheet-sync-status" class="text-xs text-slate-400" role="status">Google Sheets nu este conectat.</div>
             </div>
 
-            <div class="mt-6 flex justify-end">
+            <div class="mt-6 flex flex-wrap justify-end gap-2">
+                <button onclick="testSheetConnection()" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold">Testează sincronizarea</button>
+                <button onclick="saveSheetSettings()" class="px-4 py-2.5 is-gradient-bg text-white rounded-xl text-sm font-bold">Salvează setarea</button>
                 <button onclick="closeSyncModal()" class="px-5 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-bold">Închide</button>
             </div>
         </div>
@@ -499,6 +503,9 @@
         let googleLoginInProgress = false;
         let sharedDataLoaded = false;
         let sharedDataLoadError = null;
+        let sheetsEndpoint = "";
+        let sheetsSyncInProgress = false;
+        let sheetsSyncTimer = null;
         const firebaseConfig = window.ISYOUTH_FIREBASE_CONFIG || {};
         const hasFirebaseConfig = ['apiKey', 'authDomain', 'projectId', 'appId'].every(
             key => typeof firebaseConfig[key] === 'string' && firebaseConfig[key].trim()
@@ -526,8 +533,14 @@
             }
             renderApp();
             renderContactsUI();
+            document.getElementById('sheet-url-input').value = sheetsEndpoint;
+            updateSheetSyncStatus();
             if (sharedDataLoadError) {
                 showDataLoadError(sharedDataLoadError);
+            }
+            if (sheetsEndpoint && hasFirebaseConfig) {
+                syncSheetTotals(false);
+                sheetsSyncTimer = setInterval(() => syncSheetTotals(false), 5 * 60 * 1000);
             }
         };
 
@@ -564,6 +577,7 @@
             if (!snapshot.exists) {
                 projects = [...defaultProjects];
                 contactInfo = JSON.parse(JSON.stringify(defaultContacts));
+                sheetsEndpoint = "";
                 sharedDataLoaded = true;
                 clearDataLoadError();
                 return;
@@ -576,6 +590,7 @@
             }
             projects = data.projects;
             contactInfo = data.contacts;
+            sheetsEndpoint = typeof data.sheetsEndpoint === 'string' ? data.sheetsEndpoint : "";
             sharedDataLoaded = true;
             clearDataLoadError();
         }
@@ -593,8 +608,158 @@
             }
             await firebaseDb.collection('appData').doc('state').set({
                 projects,
-                contacts: contactInfo
+                contacts: contactInfo,
+                sheetsEndpoint
             });
+        }
+
+        function updateSheetSyncStatus(message) {
+            const status = document.getElementById('sheet-sync-status');
+            if (!status) return;
+            status.textContent = message || (sheetsEndpoint
+                ? "Google Sheets este conectat. Totalurile se actualizează automat."
+                : "Google Sheets nu este conectat.");
+        }
+
+        function isValidSheetsEndpoint(value) {
+            try {
+                const url = new URL(value);
+                return url.protocol === 'https:' &&
+                    url.hostname === 'script.google.com' &&
+                    /^\/macros\/s\/[^/]+\/exec$/.test(url.pathname);
+            } catch {
+                return false;
+            }
+        }
+
+        async function saveSheetSettings() {
+            if (!isAdminAuthorized || !firebaseDb) {
+                showToast("Este necesară autentificarea de administrator.");
+                return;
+            }
+
+            const input = document.getElementById('sheet-url-input');
+            const endpoint = input.value.trim();
+            if (endpoint && !isValidSheetsEndpoint(endpoint)) {
+                showToast("Introdu URL-ul complet al aplicației web Google Apps Script.");
+                return;
+            }
+
+            const previousEndpoint = sheetsEndpoint;
+            sheetsEndpoint = endpoint;
+            try {
+                await saveSharedData();
+                updateSheetSyncStatus();
+                if (sheetsSyncTimer) {
+                    clearInterval(sheetsSyncTimer);
+                    sheetsSyncTimer = null;
+                }
+                if (sheetsEndpoint) {
+                    syncSheetTotals(true);
+                    sheetsSyncTimer = setInterval(() => syncSheetTotals(false), 5 * 60 * 1000);
+                } else {
+                    showToast("Conexiunea Google Sheets a fost eliminată.");
+                }
+            } catch (error) {
+                sheetsEndpoint = previousEndpoint;
+                console.error('Nu s-a putut salva endpointul Google Sheets:', error);
+                showToast("Setarea Google Sheets nu a putut fi salvată.");
+            }
+        }
+
+        async function testSheetConnection() {
+            const endpoint = document.getElementById('sheet-url-input').value.trim();
+            if (!isValidSheetsEndpoint(endpoint)) {
+                showToast("Introdu mai întâi URL-ul valid al aplicației web Apps Script.");
+                return;
+            }
+
+            updateSheetSyncStatus("Se testează conexiunea la Google Sheets…");
+            try {
+                const payload = await requestSheetTotals(endpoint);
+                validateSheetTotals(payload.totals);
+                updateSheetSyncStatus("Conexiunea funcționează. Salvează setarea pentru a activa sincronizarea automată.");
+                showToast("Conexiunea la Google Sheets funcționează.");
+            } catch (error) {
+                console.error('Testarea conexiunii Google Sheets a eșuat:', error);
+                updateSheetSyncStatus("Test eșuat. Verifică publicarea Apps Script și structura foilor.");
+                showToast("Testul a eșuat. Verifică URL-ul și configurarea Apps Script.");
+            }
+        }
+
+        function requestSheetTotals(endpoint) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                const timeout = setTimeout(() => {
+                    cleanup();
+                    reject(new Error('Sincronizarea Google Sheets a expirat.'));
+                }, 15000);
+
+                function cleanup() {
+                    clearTimeout(timeout);
+                    delete window.isYouthReceiveSheetsTotals;
+                    script.remove();
+                }
+
+                window.isYouthReceiveSheetsTotals = payload => {
+                    cleanup();
+                    if (!payload || payload.error || !payload.totals ||
+                        typeof payload.totals !== 'object' || Array.isArray(payload.totals)) {
+                        reject(new Error(payload && payload.error ? payload.error : 'Răspuns invalid de la Google Sheets.'));
+                        return;
+                    }
+                    resolve(payload);
+                };
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('Endpointul Google Sheets nu a putut fi accesat.'));
+                };
+                script.src = `${endpoint}?callback=isYouthReceiveSheetsTotals&_=${Date.now()}`;
+                document.head.appendChild(script);
+            });
+        }
+
+        function validateSheetTotals(totals) {
+            const knownProjectIds = new Set(projects.map(project => project.id));
+            for (const [projectId, amount] of Object.entries(totals)) {
+                if (knownProjectIds.has(projectId) && (!Number.isFinite(amount) || amount < 0)) {
+                    throw new Error(`Total invalid pentru proiectul ${projectId}.`);
+                }
+            }
+            const missingProjectIds = projects
+                .filter(project => !Object.prototype.hasOwnProperty.call(totals, project.id))
+                .map(project => project.id);
+            if (missingProjectIds.length) {
+                throw new Error(`Lipsesc soldurile inițiale pentru: ${missingProjectIds.join(', ')}.`);
+            }
+        }
+
+        async function syncSheetTotals(showResult) {
+            if (!sheetsEndpoint || !hasFirebaseConfig || !firebaseDb || sheetsSyncInProgress) return;
+            sheetsSyncInProgress = true;
+            updateSheetSyncStatus("Se sincronizează totalurile din Google Sheets…");
+            const previousProjects = projects;
+
+            try {
+                const payload = await requestSheetTotals(sheetsEndpoint);
+                const totals = payload.totals;
+                validateSheetTotals(totals);
+
+                projects = projects.map(project => ({
+                    ...project,
+                    raised: totals[project.id]
+                }));
+                renderApp();
+                updateSheetSyncStatus(`Sincronizat din Google Sheets${payload.updatedAt ? ` · ${payload.updatedAt}` : ''}.`);
+                if (showResult) showToast("Totalurile au fost sincronizate.");
+            } catch (error) {
+                projects = previousProjects;
+                console.error('Sincronizarea Google Sheets a eșuat:', error);
+                updateSheetSyncStatus("Sincronizarea a eșuat. Verifică URL-ul și structura foilor.");
+                if (showResult) showToast("Sincronizarea a eșuat. Verifică setarea și foile Google.");
+            } finally {
+                sheetsSyncInProgress = false;
+            }
         }
 
         function showDataLoadError(message) {
@@ -971,6 +1136,9 @@
         function createActiveProjectCard(project, percent) {
             const card = document.createElement('div');
             card.className = "bg-slate-900/90 rounded-3xl overflow-hidden border border-slate-800 shadow-xl flex flex-col card-glow transition-all duration-300 group";
+            const donationDateLabel = sheetsEndpoint
+                ? "Total sincronizat din Google Sheets"
+                : `Ultima donație: <strong class="text-slate-300">${project.lastDonation}</strong>`;
 
             card.innerHTML = `
                 <div class="relative h-48 overflow-hidden bg-slate-950">
@@ -1004,7 +1172,7 @@
                         </div>
 
                         <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
-                            <span><i class="fa-regular fa-calendar mr-1"></i> Ultima donație: <strong class="text-slate-300">${project.lastDonation}</strong></span>
+                            <span><i class="fa-regular fa-calendar mr-1"></i> ${donationDateLabel}</span>
                         </div>
 
                         <button onclick="openDonateModal('${project.id}')" class="mt-5 w-full py-3 px-4 rounded-xl font-bold text-sm bg-slate-800 hover:bg-fuchsia-600 text-white transition-all duration-200 flex items-center justify-center space-x-2 border border-slate-700/60 shadow-lg">
@@ -1051,6 +1219,7 @@
                     <img src="${project.image}" class="w-10 h-10 rounded-lg object-cover bg-slate-800">
                 </td>
                 <td class="p-3 font-bold text-white">${project.title}</td>
+                <td class="p-3 text-xs font-mono text-slate-400 select-all">${project.id}</td>
                 <td class="p-3 text-emerald-400 font-bold">${project.target} MDL</td>
                 <td class="p-3 text-fuchsia-400 font-bold">${project.raised} MDL</td>
                 <td class="p-3">
@@ -1091,6 +1260,8 @@
             document.getElementById('edit-category').value = proj.category || 'General';
             document.getElementById('edit-status').value = proj.status;
             document.getElementById('edit-image').value = proj.image;
+            document.getElementById('edit-raised').readOnly = Boolean(sheetsEndpoint);
+            document.getElementById('edit-raised-help').classList.toggle('hidden', !sheetsEndpoint);
 
             document.getElementById('modal-edit-project').classList.remove('hidden');
         }
@@ -1104,6 +1275,8 @@
             document.getElementById('edit-category').value = "ISYouth";
             document.getElementById('edit-status').value = "active";
             document.getElementById('edit-image').value = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80";
+            document.getElementById('edit-raised').readOnly = Boolean(sheetsEndpoint);
+            document.getElementById('edit-raised-help').classList.toggle('hidden', !sheetsEndpoint);
 
             document.getElementById('modal-edit-project').classList.remove('hidden');
         }
@@ -1129,12 +1302,14 @@
             if (existingIndex !== -1) {
                 projects[existingIndex] = {
                     ...projects[existingIndex],
-                    title, description, target, raised, category, status, image,
+                    title, description, target,
+                    raised: sheetsEndpoint ? projects[existingIndex].raised : raised,
+                    category, status, image,
                     lastDonation: raised > projects[existingIndex].raised ? today : projects[existingIndex].lastDonation
                 };
             } else {
                 projects.unshift({
-                    id, title, description, target, raised, category, status, image,
+                    id, title, description, target, raised: sheetsEndpoint ? 0 : raised, category, status, image,
                     lastDonation: today
                 });
             }
@@ -1142,6 +1317,9 @@
             if (await saveState()) {
                 closeEditModal();
                 showToast("Proiect salvat cu succes!");
+                if (sheetsEndpoint) {
+                    showToast("Adaugă ID-ul proiectului în foaia „Proiecte” pentru a sincroniza soldul.");
+                }
             }
         }
 
@@ -1167,6 +1345,8 @@
         }
 
         function openSyncModal() {
+            document.getElementById('sheet-url-input').value = sheetsEndpoint;
+            updateSheetSyncStatus();
             document.getElementById('modal-sync').classList.remove('hidden');
         }
 
