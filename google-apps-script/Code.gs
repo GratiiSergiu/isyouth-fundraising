@@ -3,18 +3,33 @@ function setupSheets() {
   const projectsSheet = getOrCreateSheet_(spreadsheet, 'Proiecte');
   const donationsSheet = getOrCreateSheet_(spreadsheet, 'Donații');
 
-  ensureHeaders_(projectsSheet, ['ID proiect', 'Sold inițial (MDL)']);
-  ensureHeaders_(donationsSheet, ['Data', 'ID proiect', 'Sumă (MDL)', 'Status', 'Notă internă']);
+  ensureHeaders_(projectsSheet, ['ID proiect', 'Nume proiect', 'Sold inițial (MDL)']);
+  ensureHeaders_(donationsSheet, [
+    'Data donației',
+    'Data înregistrării',
+    'ID proiect',
+    'Sumă (MDL)',
+    'Nume donator (opțional)',
+    'Status',
+    'Notă internă (opțional)'
+  ]);
 
-  projectsSheet.getRange('B:B').setNumberFormat('#,##0.00');
+  projectsSheet.getRange('C:C').setNumberFormat('#,##0.00');
   donationsSheet.getRange('A:A').setNumberFormat('dd.mm.yyyy');
-  donationsSheet.getRange('C:C').setNumberFormat('#,##0.00');
+  donationsSheet.getRange('B:B').setNumberFormat('dd.mm.yyyy hh:mm');
+  donationsSheet.getRange('D:D').setNumberFormat('#,##0.00');
 
   const statusRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(['Confirmată', 'Anulată'], true)
     .setAllowInvalid(false)
     .build();
-  donationsSheet.getRange(2, 4, donationsSheet.getMaxRows() - 1, 1).setDataValidation(statusRule);
+  donationsSheet.getRange(2, 6, donationsSheet.getMaxRows() - 1, 1).setDataValidation(statusRule);
+
+  const projectIdRule = SpreadsheetApp.newDataValidation()
+    .requireValueInRange(projectsSheet.getRange(2, 1, projectsSheet.getMaxRows() - 1, 1), true)
+    .setAllowInvalid(false)
+    .build();
+  donationsSheet.getRange(2, 3, donationsSheet.getMaxRows() - 1, 1).setDataValidation(projectIdRule);
 }
 
 function getOrCreateSheet_(spreadsheet, name) {
@@ -33,6 +48,48 @@ function ensureHeaders_(sheet, expectedHeaders) {
   const expected = expectedHeaders.map(normalizeHeader_);
   if (existingHeaders.some((header, index) => header !== expected[index])) {
     throw new Error(`The header row in ${sheet.getName()} does not match the expected layout.`);
+  }
+}
+
+function onEdit(event) {
+  if (!event || !event.range || event.range.getSheet().getName() !== 'Donații') return;
+
+  const sheet = event.range.getSheet();
+  const firstRow = Math.max(2, event.range.getRow());
+  const lastRow = event.range.getLastRow();
+  if (firstRow > lastRow) return;
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_);
+  const donationDateColumn = headers.indexOf('data donatiei');
+  const recordedAtColumn = headers.indexOf('data inregistrarii');
+  const projectIdColumn = headers.indexOf('id proiect');
+  const amountColumn = headers.indexOf('suma mdl');
+  const statusColumn = headers.indexOf('status');
+  if ([donationDateColumn, recordedAtColumn, projectIdColumn, amountColumn, statusColumn].some(column => column < 0)) {
+    throw new Error('The Donații sheet headers are invalid.');
+  }
+
+  const rowCount = lastRow - firstRow + 1;
+  const rows = sheet.getRange(firstRow, 1, rowCount, sheet.getLastColumn()).getValues();
+  let changed = false;
+  const registeredAt = rows.map(row => {
+    const currentTimestamp = row[recordedAtColumn];
+    const status = normalizeHeader_(row[statusColumn]);
+    const donationIsComplete = row[donationDateColumn] &&
+      String(row[projectIdColumn] || '').trim() &&
+      Number.isFinite(Number(row[amountColumn])) &&
+      Number(row[amountColumn]) > 0 &&
+      (status === 'confirmata' || status === 'confirmed');
+
+    if (!currentTimestamp && donationIsComplete) {
+      changed = true;
+      return [new Date()];
+    }
+    return [currentTimestamp || ''];
+  });
+
+  if (changed) {
+    sheet.getRange(firstRow, recordedAtColumn + 1, rowCount, 1).setValues(registeredAt);
   }
 }
 

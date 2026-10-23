@@ -18,7 +18,9 @@ Registrul cu înregistrări individuale rămâne privat. Site-ul cere endpointul
 
 În Google Sheets, deschide **Extensions > Apps Script**, înlocuiește codul editorului cu `google-apps-script/Code.gs` și salvează. Selectează funcția `setupSheets` din editorul Apps Script și apasă **Run** o singură dată; aprobă permisiunile solicitate. Funcția creează filele `Proiecte` și `Donații` cu antetele și lista de statusuri necesare. Dacă există deja file cu aceste nume și alte antete, funcția se oprește fără să le suprascrie — verifică datele existente înainte să le ajustezi.
 
-În fila `Proiecte`, adaugă câte un rând pentru fiecare proiect și soldul cu care începe evidența în Sheet. În fila `Donații`, înregistrează fiecare donație cash confirmată ca rând separat; `Status` trebuie să fie `Confirmată` sau `Anulată`. O înregistrare anulată nu intră în total.
+Fila `Proiecte` are coloanele `ID proiect`, `Nume proiect`, `Sold inițial (MDL)`. Adaugă câte un rând pentru fiecare proiect și soldul cu care începe evidența în Sheet. Numele ajută la identificarea rândului în registrul intern; denumirea și ținta afișate vizitatorilor rămân administrate pe site.
+
+Fila `Donații` are coloanele `Data donației`, `Data înregistrării`, `ID proiect`, `Sumă (MDL)`, `Nume donator (opțional)`, `Status`, `Notă internă (opțional)`. Pentru fiecare donație cash, completează data primirii, proiectul, suma și statusul `Confirmată`; data înregistrării se completează automat când rândul este complet și confirmat. Numele donatorului și nota sunt opționale și rămân doar în foaia privată. Dacă o înregistrare este greșită, schimbă statusul în `Anulată`; aceasta nu intră în total și păstrează istoricul.
 
 ID-urile trebuie să coincidă cu ID-urile proiectelor din site (de exemplu `lavoar`, `cafea`, `canapea`, `jocuri`), iar fila `Proiecte` trebuie să conțină toate proiectele afișate pe site. Sumele sunt numere MDL, fără text sau monedă în celulă. Nu adăuga numele donatorilor dacă nu sunt necesare pentru evidența voastră internă.
 
