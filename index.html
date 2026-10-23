@@ -12,6 +12,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -60,7 +64,7 @@
     <header class="sticky top-0 z-40 backdrop-blur-xl bg-[#0b0c10]/85 border-b border-slate-800/80">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             
-            <!-- ISYouth Logo (Apasă de 3 ori rapid pentru autentificare admin) -->
+            <!-- ISYouth Logo (Apasă de 3 ori rapid pentru administrare) -->
             <div class="flex items-center space-x-3 cursor-pointer select-none" onclick="handleLogoClick()" title="ISYouth - Apasă de 3 ori pentru administrare">
                 <div class="flex flex-col">
                     <span class="text-3xl font-black tracking-tight leading-none">
@@ -128,6 +132,12 @@
                 </div>
             </div>
         </section>
+
+        <div id="data-load-error" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6" role="alert">
+            <p class="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
+                Datele comune nu sunt disponibile momentan.
+            </p>
+        </div>
 
         <!-- ADMIN EDIT CONTROL PANEL (Ascuns implicit) -->
         <section id="admin-panel" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-8 space-y-8">
@@ -486,46 +496,158 @@
         let isAdminAuthorized = false;
         let logoClickCounter = 0;
         let logoClickTimer = null;
+        let googleLoginInProgress = false;
+        let sharedDataLoaded = false;
+        let sharedDataLoadError = null;
+        const firebaseConfig = window.ISYOUTH_FIREBASE_CONFIG || {};
+        const hasFirebaseConfig = ['apiKey', 'authDomain', 'projectId', 'appId'].every(
+            key => typeof firebaseConfig[key] === 'string' && firebaseConfig[key].trim()
+        );
+        let firebaseAuth = null;
+        let firebaseDb = null;
 
-        window.onload = function() {
-            // Încărcare proiecte
-            const savedProjects = localStorage.getItem('isyouth_projects');
-            if (savedProjects) {
+        window.onload = async function() {
+            if (hasFirebaseConfig) {
                 try {
-                    projects = JSON.parse(savedProjects);
-                } catch(e) {
-                    projects = [...defaultProjects];
+                    firebase.initializeApp(firebaseConfig);
+                    firebaseAuth = firebase.auth();
+                    firebaseDb = firebase.firestore();
+                    await loadSharedData();
+                } catch (error) {
+                    console.error('Nu s-au putut încărca datele Firebase:', error);
+                    sharedDataLoaded = false;
+                    sharedDataLoadError = "Datele comune nu s-au putut încărca. Verifică conexiunea și configurarea Firebase.";
+                }
+                if (firebaseAuth) {
+                    firebaseAuth.onAuthStateChanged(handleAuthStateChange);
                 }
             } else {
+                loadLocalData();
+            }
+            renderApp();
+            renderContactsUI();
+            if (sharedDataLoadError) {
+                showDataLoadError(sharedDataLoadError);
+            }
+        };
+
+        function loadLocalData() {
+            const savedProjects = localStorage.getItem('isyouth_projects');
+            const savedContacts = localStorage.getItem('isyouth_contacts');
+
+            try {
+                projects = savedProjects ? JSON.parse(savedProjects) : [...defaultProjects];
+            } catch (error) {
+                console.error('Datele locale ale proiectelor sunt invalide:', error);
                 projects = [...defaultProjects];
             }
 
-            // Încărcare date contact dinamic
-            const savedContacts = localStorage.getItem('isyouth_contacts');
-            if (savedContacts) {
-                try {
-                    contactInfo = JSON.parse(savedContacts);
-                    // Migrare automata de la structura veche fixă dacă e cazul
-                    if(!contactInfo.phones) {
-                        contactInfo = {
-                            phones: [{ name: contactInfo.name || "Coordonator", number: contactInfo.phone || "0692 13 926" }],
-                            links: [
-                                { name: "Instagram ISYouth", url: contactInfo.instagram || "", type: "instagram" },
-                                { name: "Canal Telegram", url: contactInfo.telegram || "", type: "telegram" }
-                            ]
-                        };
-                    }
-                } catch(e) {
-                    contactInfo = JSON.parse(JSON.stringify(defaultContacts));
+            try {
+                contactInfo = savedContacts ? JSON.parse(savedContacts) : JSON.parse(JSON.stringify(defaultContacts));
+                if (!contactInfo.phones) {
+                    contactInfo = {
+                        phones: [{ name: contactInfo.name || "Coordonator", number: contactInfo.phone || "0692 13 926" }],
+                        links: [
+                            { name: "Instagram ISYouth", url: contactInfo.instagram || "", type: "instagram" },
+                            { name: "Canal Telegram", url: contactInfo.telegram || "", type: "telegram" }
+                        ]
+                    };
                 }
-            } else {
+            } catch (error) {
+                console.error('Datele locale de contact sunt invalide:', error);
                 contactInfo = JSON.parse(JSON.stringify(defaultContacts));
             }
+        }
 
-            checkAdminAuth();
-            renderApp();
-            renderContactsUI();
-        };
+        async function loadSharedData() {
+            const snapshot = await firebaseDb.collection('appData').doc('state').get();
+            if (!snapshot.exists) {
+                projects = [...defaultProjects];
+                contactInfo = JSON.parse(JSON.stringify(defaultContacts));
+                sharedDataLoaded = true;
+                clearDataLoadError();
+                return;
+            }
+
+            const data = snapshot.data();
+            if (!Array.isArray(data.projects) || !data.contacts ||
+                !Array.isArray(data.contacts.phones) || !Array.isArray(data.contacts.links)) {
+                throw new Error('Structura documentului appData/state este invalidă.');
+            }
+            projects = data.projects;
+            contactInfo = data.contacts;
+            sharedDataLoaded = true;
+            clearDataLoadError();
+        }
+
+        function clearDataLoadError() {
+            sharedDataLoadError = null;
+            document.getElementById('data-load-error').classList.add('hidden');
+            document.getElementById('active-projects-grid').classList.remove('hidden');
+            document.getElementById('completed-projects-grid').classList.remove('hidden');
+        }
+
+        async function saveSharedData() {
+            if (!sharedDataLoaded) {
+                throw new Error('Datele comune nu au fost încărcate; salvarea este blocată pentru a evita suprascrierea.');
+            }
+            await firebaseDb.collection('appData').doc('state').set({
+                projects,
+                contacts: contactInfo
+            });
+        }
+
+        function showDataLoadError(message) {
+            const errorElement = document.getElementById('data-load-error');
+            errorElement.querySelector('p').textContent = message;
+            errorElement.classList.remove('hidden');
+            document.getElementById('active-projects-grid').classList.add('hidden');
+            document.getElementById('completed-projects-grid').classList.add('hidden');
+            document.getElementById('stat-total').textContent = "—";
+            document.getElementById('stat-active').textContent = "—";
+            document.getElementById('stat-completed').textContent = "—";
+        }
+
+        async function restoreSharedDataAfterFailure() {
+            try {
+                await loadSharedData();
+                renderApp();
+                renderContactsUI();
+            } catch (error) {
+                console.error('Nu s-au putut reîncărca datele după o salvare eșuată:', error);
+                sharedDataLoaded = false;
+                showDataLoadError("Datele comune nu sunt disponibile. Modificările nu au fost salvate.");
+            }
+        }
+
+        async function handleAuthStateChange(user) {
+            if (!user) {
+                disableAdminMode();
+                return;
+            }
+
+            try {
+                const adminDoc = await firebaseDb.collection('admins').doc(user.uid).get();
+                if (!adminDoc.exists || adminDoc.data().enabled !== true) {
+                    googleLoginInProgress = false;
+                    await firebaseAuth.signOut();
+                    showToast("Acest cont Google nu are acces de administrare.");
+                    return;
+                }
+
+                enableAdminMode();
+                if (googleLoginInProgress) {
+                    googleLoginInProgress = false;
+                    toggleAdminPanel();
+                    showToast("Autentificare Google reușită.");
+                }
+            } catch (error) {
+                console.error('Nu s-a putut verifica permisiunea de administrare:', error);
+                googleLoginInProgress = false;
+                await firebaseAuth.signOut();
+                showToast("Nu s-a putut verifica accesul. Verifică regulile Firestore.");
+            }
+        }
 
         function renderContactsUI() {
             renderAdminContactInputs();
@@ -628,9 +750,25 @@
             });
 
             contactInfo = { phones: newPhones, links: newLinks };
-            localStorage.setItem('isyouth_contacts', JSON.stringify(contactInfo));
-            renderContactsUI();
-            showToast("Toate informațiile de contact au fost salvate!");
+            saveContactInfo();
+        }
+
+        async function saveContactInfo() {
+            try {
+                if (hasFirebaseConfig) {
+                    await saveSharedData();
+                } else {
+                    localStorage.setItem('isyouth_contacts', JSON.stringify(contactInfo));
+                }
+                renderContactsUI();
+                showToast("Toate informațiile de contact au fost salvate!");
+            } catch (error) {
+                console.error('Nu s-au putut salva datele de contact:', error);
+                if (hasFirebaseConfig) {
+                    await restoreSharedDataAfterFailure();
+                }
+                showToast("Salvarea contactelor a eșuat. Verifică permisiunile și conexiunea.");
+            }
         }
 
         // Render Contacts inside Modal
@@ -701,21 +839,8 @@
             });
         }
 
-        function checkAdminAuth() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const adminParam = urlParams.get('admin');
-            const sessionAdmin = sessionStorage.getItem('isyouth_admin_active');
-
-            if (adminParam === '1' || adminParam === 'isyouth' || adminParam === 'true' || sessionAdmin === 'true') {
-                enableAdminMode();
-            } else {
-                disableAdminMode();
-            }
-        }
-
         function enableAdminMode() {
             isAdminAuthorized = true;
-            sessionStorage.setItem('isyouth_admin_active', 'true');
             const bar = document.getElementById('admin-actions-bar');
             if (bar) {
                 bar.classList.remove('hidden');
@@ -725,7 +850,6 @@
 
         function disableAdminMode() {
             isAdminAuthorized = false;
-            sessionStorage.removeItem('isyouth_admin_active');
             const bar = document.getElementById('admin-actions-bar');
             if (bar) {
                 bar.classList.add('hidden');
@@ -735,10 +859,17 @@
             if (panel) panel.classList.add('hidden');
         }
 
-        function lockAdminMode() {
+        async function lockAdminMode() {
+            if (firebaseAuth) {
+                try {
+                    await firebaseAuth.signOut();
+                } catch (error) {
+                    console.error('Nu s-a putut închide sesiunea Google:', error);
+                    showToast("Deconectarea a eșuat. Reîncarcă pagina și încearcă din nou.");
+                    return;
+                }
+            }
             disableAdminMode();
-            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-            window.history.pushState({path: cleanUrl}, '', cleanUrl);
             showToast("Modul administrare a fost închis.");
         }
 
@@ -748,17 +879,10 @@
             
             if (logoClickCounter >= 3) {
                 logoClickCounter = 0;
-                if (!isAdminAuthorized) {
-                    const pass = prompt("Introduceți parola de administrare ISYouth:");
-                    if (pass === "isyouth2026" || pass === "admin") {
-                        enableAdminMode();
-                        showToast("Autentificare reușită! Mod Admin activat.");
-                        toggleAdminPanel();
-                    } else if (pass !== null) {
-                        alert("Parolă incorectă!");
-                    }
-                } else {
+                if (isAdminAuthorized) {
                     toggleAdminPanel();
+                } else {
+                    startGoogleSignIn();
                 }
             } else {
                 logoClickTimer = setTimeout(() => {
@@ -767,16 +891,47 @@
             }
         }
 
-        function saveState() {
-            localStorage.setItem('isyouth_projects', JSON.stringify(projects));
-            renderApp();
+        async function startGoogleSignIn() {
+            if (!hasFirebaseConfig || !firebaseAuth) {
+                showToast("Autentificarea Google nu este configurată încă.");
+                return;
+            }
+
+            googleLoginInProgress = true;
+            try {
+                await firebaseAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+            } catch (error) {
+                googleLoginInProgress = false;
+                console.error('Conectarea Google a eșuat:', error);
+                showToast(`Conectarea Google a eșuat (${error.code || 'eroare necunoscută'}).`);
+            }
         }
 
-        function resetToDefaults() {
+        async function saveState() {
+            try {
+                if (hasFirebaseConfig) {
+                    await saveSharedData();
+                } else {
+                    localStorage.setItem('isyouth_projects', JSON.stringify(projects));
+                }
+                renderApp();
+                return true;
+            } catch (error) {
+                console.error('Nu s-au putut salva proiectele:', error);
+                if (hasFirebaseConfig) {
+                    await restoreSharedDataAfterFailure();
+                }
+                showToast("Salvarea proiectului a eșuat. Verifică permisiunile și conexiunea.");
+                return false;
+            }
+        }
+
+        async function resetToDefaults() {
             if (confirm("Sigur dorești să resetezi proiectele la cele inițiale?")) {
                 projects = [...defaultProjects];
-                saveState();
-                showToast("Proiectele au fost resetate!");
+                if (await saveState()) {
+                    showToast("Proiectele au fost resetate!");
+                }
             }
         }
 
@@ -957,7 +1112,7 @@
             document.getElementById('modal-edit-project').classList.add('hidden');
         }
 
-        function saveProjectForm(event) {
+        async function saveProjectForm(event) {
             event.preventDefault();
             const id = document.getElementById('edit-project-id').value;
             const title = document.getElementById('edit-title').value;
@@ -984,16 +1139,18 @@
                 });
             }
 
-            saveState();
-            closeEditModal();
-            showToast("Proiect salvat cu succes!");
+            if (await saveState()) {
+                closeEditModal();
+                showToast("Proiect salvat cu succes!");
+            }
         }
 
-        function deleteProject(id) {
+        async function deleteProject(id) {
             if (confirm("Sigur dorești să ștergi acest proiect?")) {
                 projects = projects.filter(p => p.id !== id);
-                saveState();
-                showToast("Proiect șters!");
+                if (await saveState()) {
+                    showToast("Proiect șters!");
+                }
             }
         }
 
