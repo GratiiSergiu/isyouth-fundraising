@@ -548,6 +548,9 @@
         let sheetSyncRequestId = 0;
         let sheetSyncInProgress = false;
         let projectDetailsReturnFocus = null;
+        const advanceVerseOnAuthTransition = window.ISYOUTH_DAILY_VERSE.createAuthTransitionHandler(
+            () => window.advanceDailyVerse()
+        );
         const sheetSyncIntervalMs = 5 * 60 * 1000;
         const firebaseConfig = window.ISYOUTH_FIREBASE_CONFIG || {};
         const hasFirebaseConfig = ['apiKey', 'authDomain', 'projectId', 'appId'].every(
@@ -688,6 +691,8 @@
         }
 
         async function handleAuthStateChange(user) {
+            advanceVerseOnAuthTransition(user);
+
             if (!user) {
                 disableAdminMode();
                 return;
