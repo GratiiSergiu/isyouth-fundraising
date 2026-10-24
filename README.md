@@ -4,13 +4,19 @@ Site static publicat pe GitHub Pages. Proiectele și datele de contact sunt citi
 
 ## Configurarea Firebase
 
-1. Creează un proiect Firebase, activează **Authentication > Google** și creează o bază de date **Cloud Firestore**.
-2. Înregistrează o aplicație Web în proiect și verifică `firebase-config.js` pentru valorile `apiKey`, `authDomain`, `projectId` și `appId`. Aceste valori sunt publice; nu adăuga chei de cont de serviciu sau alte secrete în site.
+1. Creează un proiect Firebase, activează **Authentication > Google**, creează o bază de date **Cloud Firestore** și activează **Storage**.
+2. Înregistrează o aplicație Web în proiect și verifică `firebase-config.js` pentru valorile `apiKey`, `authDomain`, `projectId`, `appId` și `storageBucket`. Copiază `storageBucket` din Firebase Console (**Storage**); nu ghici numele bucket-ului. Aceste valori sunt publice; nu adăuga chei de cont de serviciu sau alte secrete în site.
 3. În **Authentication > Settings > Authorized domains**, autorizează domeniul pe care este publicat site-ul.
-4. În **Firestore Database > Rules**, înlocuiește regulile cu conținutul din `firestore.rules` și apasă **Publish**. Alternativ, Firebase CLI poate publica fișierul cu `firebase deploy --only firestore:rules --project ID_PROIECT`.
+4. În **Firestore Database > Rules**, înlocuiește regulile cu conținutul din `firestore.rules` și apasă **Publish**. În **Storage > Rules**, înlocuiește regulile cu `storage.rules` și apasă **Publish**. Alternativ, Firebase CLI poate publica ambele seturi cu `firebase deploy --only firestore:rules,storage --project ID_PROIECT`.
 5. Fiecare administrator se conectează o dată prin trei clicuri rapide pe logo. În **Authentication > Users**, copiază UID-ul contului aprobat și creează în Firestore documentul `admins/UID` cu câmpul boolean `enabled` setat la `true`.
 
 Numai conturile cu document de administrator activ pot modifica documentul comun `appData/state`. Vizitatorii pot doar să citească proiectele și contactele publice. Un cont neaprobat care pornește autentificarea va fi deconectat automat și nu va putea accesa panoul sau modifica date. Nu crea documente de administrator pentru conturi neaprobate. Regulile Firestore sunt măsura de securitate efectivă; ascunderea panoului în interfață nu înlocuiește aceste reguli.
+
+## Galerie foto pentru proiecte finalizate
+
+Galeria este opțională și se activează separat din editarea unui proiect cu status **Livrat / Finalizat**. Este destinată proiectelor cu etape vizibile (de exemplu reparații sau renovări), nu achizițiilor obișnuite; proiectele active nu afișează cronologii, chiar dacă date vechi au rămas în document. Administratorii pot încărca maximum 12 fotografii per proiect, de cel mult 5 MB fiecare, în format JPEG, PNG, WebP sau GIF, cu etichetă de etapă și dată opționale. Fotografiile sunt publice pentru afișare; regulile permit scrierea și ștergerea numai conturilor cu document `admins/UID` activ.
+
+Încărcarea necesită un bucket Firebase Storage activ, regulile `storage.rules` publicate și valoarea `storageBucket` din Firebase Console adăugată la `firebase-config.js`. Fără această configurare, site-ul păstrează funcționale detaliile și proiectele existente, dar încărcările și eliminarea fotografiilor sunt dezactivate. Activarea Storage poate necesita planul **Blaze** și poate genera costuri conform tarifelor Google Cloud/Firebase; verifică planul, cotele și facturarea proiectului înainte de activare. La ștergerea proiectului sau a unei fotografii, site-ul șterge obiectul din Storage după salvarea datelor; erorile de ștergere sunt afișate, iar obiectele rămase trebuie eliminate manual din Firebase Console.
 
 ## Integrarea totalurilor Google Sheets
 
