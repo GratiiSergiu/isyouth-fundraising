@@ -17,7 +17,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="sheets-sync.js"></script>
-    <script src="project-data.js"></script>
+    <script src="project-data.js?v=20261024-1"></script>
     <script src="project-gallery.js"></script>
     <script>
         tailwind.config = {
@@ -1589,7 +1589,6 @@
 
             projectDetailsReturnFocus = document.activeElement;
             projectDetailsProjectId = project.id;
-            lockModalPageScroll();
             document.getElementById('project-details-content').scrollTop = 0;
             document.getElementById('project-details-title').textContent = project.title;
             document.getElementById('project-details-category').textContent = project.category || 'Proiect ISYouth';
@@ -1608,6 +1607,7 @@
             image.src = project.image || 'https://placehold.co/600x400/1e293b/ffffff?text=ISYouth';
             renderProjectGallery(project);
             document.getElementById('modal-project-details').classList.remove('hidden');
+            lockModalPageScroll();
             document.getElementById('project-details-close').focus();
         }
 
