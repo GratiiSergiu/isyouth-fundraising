@@ -32,5 +32,9 @@
         });
     }
 
-    return { normalizeProjects };
+    function canReceiveDonations(project) {
+        return Boolean(project && project.status === 'active');
+    }
+
+    return { normalizeProjects, canReceiveDonations };
 });

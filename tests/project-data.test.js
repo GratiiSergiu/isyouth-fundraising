@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { normalizeProjects } = require('../project-data.js');
+const { canReceiveDonations, normalizeProjects } = require('../project-data.js');
 
 test('copies legacy descriptions into both new project description fields', () => {
     const legacyProject = {
@@ -42,4 +42,11 @@ test('uses the available new description when the legacy field is missing', () =
 test('rejects invalid project data instead of silently dropping it', () => {
     assert.throws(() => normalizeProjects({}), /array/i);
     assert.throws(() => normalizeProjects([null]), /invalid/i);
+});
+
+test('only active projects can receive donations', () => {
+    assert.equal(canReceiveDonations({ status: 'active' }), true);
+    assert.equal(canReceiveDonations({ status: 'completed' }), false);
+    assert.equal(canReceiveDonations({ status: 'paused' }), false);
+    assert.equal(canReceiveDonations(null), false);
 });
