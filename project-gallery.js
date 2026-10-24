@@ -6,17 +6,28 @@
     root.ISYOUTH_GALLERY = api;
 })(typeof window !== 'undefined' ? window : globalThis, function () {
     const maxGalleryImages = 12;
-    const maxImageBytes = 5 * 1024 * 1024;
-    const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
-    function validateImageFile(file) {
-        if (!file || !allowedImageTypes.has(file.type)) {
-            throw new TypeError('Alege o imagine JPEG, PNG, WebP sau GIF.');
+    function validateImgixUrl(value) {
+        if (typeof value !== 'string' || !value.trim()) {
+            throw new TypeError('Adaugă un URL de imagine Imgix.');
         }
-        if (!Number.isFinite(file.size) || file.size <= 0 || file.size > maxImageBytes) {
-            throw new RangeError('Fiecare fotografie trebuie să aibă între 1 byte și 5 MB.');
+
+        let url;
+        try {
+            url = new URL(value.trim());
+        } catch {
+            throw new TypeError('Adresa imaginii este invalidă.');
         }
-        return true;
+        if (url.protocol !== 'https:' ||
+            !url.hostname.endsWith('.imgix.net') ||
+            url.hostname === 'imgix.net' ||
+            url.username ||
+            url.password ||
+            url.port ||
+            url.pathname === '/') {
+            throw new TypeError('Folosește un URL HTTPS de imagine de pe un subdomeniu *.imgix.net.');
+        }
+        return url.href;
     }
 
     function normalizeGallery(gallery) {
@@ -27,30 +38,33 @@
         return gallery.map((image, index) => {
             if (!image || typeof image !== 'object' || Array.isArray(image) ||
                 typeof image.id !== 'string' || !image.id.trim() ||
-                typeof image.storagePath !== 'string' ||
-                !/^project-galleries\/[^/]+\/[^/]+$/.test(image.storagePath) ||
                 typeof image.url !== 'string') {
                 throw new TypeError(`Fotografia ${index + 1} din galerie este invalidă.`);
             }
 
             let url;
             try {
-                url = new URL(image.url);
+                url = validateImgixUrl(image.url);
             } catch {
-                throw new TypeError(`Adresa fotografiei ${index + 1} este invalidă.`);
-            }
-            if (url.protocol !== 'https:') {
-                throw new TypeError(`Adresa fotografiei ${index + 1} trebuie să folosească HTTPS.`);
+                throw new TypeError(`Adresa fotografiei ${index + 1} trebuie să fie un URL HTTPS valid de pe *.imgix.net.`);
             }
 
             const label = image.label === undefined ? '' : image.label;
             const date = image.date === undefined ? '' : image.date;
             if (typeof label !== 'string' || label.length > 80 ||
-                typeof date !== 'string' || (date && !isValidDate(date))) {
-                throw new TypeError(`Eticheta sau data fotografiei ${index + 1} este invalidă.`);
+                typeof date !== 'string' || (date && !isValidDate(date)) ||
+                (image.order !== undefined &&
+                    (!Number.isInteger(image.order) || image.order < 0 || image.order >= maxGalleryImages))) {
+                throw new TypeError(`Eticheta, data sau ordinea fotografiei ${index + 1} din galerie este invalidă.`);
             }
 
-            return { id: image.id, storagePath: image.storagePath, url: url.href, label, date };
+            return {
+                id: image.id.trim(),
+                url,
+                label,
+                date,
+                ...(image.order === undefined ? {} : { order: image.order })
+            };
         });
     }
 
@@ -71,6 +85,9 @@
     }
 
     function sortGalleryChronologically(gallery) {
+        if (gallery.every(image => Number.isInteger(image.order))) {
+            return gallery.slice().sort((first, second) => first.order - second.order);
+        }
         return gallery.slice().sort((first, second) => {
             if (!first.date) return second.date ? 1 : 0;
             if (!second.date) return -1;
@@ -78,12 +95,26 @@
         });
     }
 
+    function moveGalleryImage(gallery, index, direction) {
+        if (!Array.isArray(gallery) || !Number.isInteger(index) ||
+            index < 0 || index >= gallery.length || (direction !== -1 && direction !== 1)) {
+            throw new RangeError('Poziția fotografiei pentru reordonare este invalidă.');
+        }
+
+        const target = index + direction;
+        if (target < 0 || target >= gallery.length) return gallery;
+
+        const reordered = gallery.slice();
+        [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+        return reordered.map((image, order) => ({ ...image, order }));
+    }
+
     return {
         maxGalleryImages,
-        maxImageBytes,
-        validateImageFile,
+        validateImgixUrl,
         normalizeGallery,
         canShowGallery,
-        sortGalleryChronologically
+        sortGalleryChronologically,
+        moveGalleryImage
     };
 });

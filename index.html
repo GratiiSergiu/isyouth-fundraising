@@ -15,7 +15,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="sheets-sync.js"></script>
     <script src="project-data.js"></script>
@@ -477,18 +476,20 @@
                 <section id="project-gallery-editor" class="hidden rounded-2xl border border-indigo-500/30 bg-indigo-500/5 p-4 space-y-4" aria-labelledby="project-gallery-editor-title">
                     <div>
                         <h4 id="project-gallery-editor-title" class="text-sm font-bold text-indigo-200">Galerie foto pentru proiecte cu progres vizibil</h4>
-                        <p class="mt-1 text-xs leading-relaxed text-slate-400">Opțională pentru proiecte finalizate potrivite, precum reparații sau renovări. Adaugă cel mult 12 imagini, maximum 5 MB fiecare. Tipuri acceptate: JPEG, PNG, WebP și GIF.</p>
-                        <p id="project-gallery-storage-status" class="mt-2 text-xs text-amber-300" role="status"></p>
+                        <p class="mt-1 text-xs leading-relaxed text-slate-400">Opțională pentru proiecte finalizate potrivite, precum reparații sau renovări. Adaugă cel mult 12 URL-uri HTTPS de pe un subdomeniu *.imgix.net. Galeria este publică atunci când este activată; publică doar fotografii pentru care ai permisiunea persoanelor fotografiate.</p>
+                        <p id="project-gallery-url-status" class="mt-2 text-xs text-amber-300" role="status">Imaginile sunt servite de Imgix; modificările galeriei se salvează în Firestore.</p>
                     </div>
                     <label class="flex items-start gap-3 text-sm font-semibold text-white">
                         <input id="edit-gallery-enabled" type="checkbox" class="mt-0.5 accent-fuchsia-500">
-                        <span>Afișează galeria cronologică în detaliile proiectului</span>
+                        <span>Afișează galeria foto în detaliile proiectului</span>
                     </label>
                     <div id="project-gallery-existing" class="space-y-3"></div>
                     <div>
-                        <label for="edit-gallery-files" class="block text-xs font-bold uppercase text-slate-300">Adaugă fotografii</label>
-                        <input id="edit-gallery-files" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple class="mt-2 block w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:font-bold file:text-white">
-                        <div id="project-gallery-pending" class="mt-3 space-y-3"></div>
+                        <label for="edit-gallery-image-url" class="block text-xs font-bold uppercase text-slate-300">Adaugă URL de imagine Imgix</label>
+                        <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+                            <input id="edit-gallery-image-url" type="url" placeholder="https://isyouth.imgix.net/proiect/fotografie.webp" class="min-w-0 flex-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white">
+                            <button id="edit-gallery-add-url" type="button" class="rounded-lg border border-indigo-400/30 px-3 py-2 text-xs font-bold text-indigo-200">Adaugă imagine</button>
+                        </div>
                     </div>
                 </section>
 
@@ -658,8 +659,6 @@
         let projectDetailsProjectId = null;
         let projectDetailsGalleryIndex = 0;
         let projectGalleryDraft = [];
-        let projectGalleryPendingFiles = [];
-        let firebaseStorage = null;
         let projectSaveInProgress = false;
         let donateModalReturnFocus = null;
         let modalScrollLockCount = 0;
@@ -682,9 +681,6 @@
                     firebase.initializeApp(firebaseConfig);
                     firebaseAuth = firebase.auth();
                     firebaseDb = firebase.firestore();
-                    if (typeof firebaseConfig.storageBucket === 'string' && firebaseConfig.storageBucket.trim()) {
-                        firebaseStorage = firebase.storage();
-                    }
                     await loadSharedData();
                 } catch (error) {
                     console.error('Nu s-au putut încărca datele Firebase:', error);
@@ -709,7 +705,7 @@
         };
 
         document.getElementById('edit-status').addEventListener('change', renderProjectGalleryEditor);
-        document.getElementById('edit-gallery-files').addEventListener('change', handleGalleryFileSelection);
+        document.getElementById('edit-gallery-add-url').addEventListener('click', addGalleryImageUrl);
 
         function loadLocalData() {
             const savedProjects = localStorage.getItem('isyouth_projects');
@@ -1123,45 +1119,37 @@
 
         async function resetToDefaults() {
             if (confirm("Sigur dorești să resetezi proiectele la cele inițiale?")) {
-                const removedGalleryImages = projects.flatMap(project => Array.isArray(project.gallery) ? project.gallery : []);
-                if (!canManageGalleryFiles(removedGalleryImages)) return;
                 projects = window.ISYOUTH_PROJECTS.normalizeProjects(defaultProjects);
                 if (await saveState()) {
-                    const failedCleanup = await deleteGalleryStorageImages(removedGalleryImages);
-                    showToast(failedCleanup.length
-                        ? "Proiectele au fost resetate, dar unele fotografii nu au putut fi eliminate din Storage."
-                        : "Proiectele au fost resetate!");
+                    showToast("Proiectele au fost resetate!");
                 }
             }
-        }
-
-        function canManageGalleryFiles(images) {
-            if (images.length && !firebaseStorage) {
-                showToast("Configurează storageBucket și Firebase Storage înainte de a elimina fotografii.");
-                return false;
-            }
-            return true;
         }
 
         function renderProjectGalleryEditor() {
             const section = document.getElementById('project-gallery-editor');
             const isCompleted = document.getElementById('edit-status').value === 'completed';
             section.classList.toggle('hidden', !isCompleted);
-            document.getElementById('project-gallery-storage-status').textContent = firebaseStorage
-                ? 'storageBucket este configurat; bucket-ul trebuie să existe, iar regulile Storage să fie publicate.'
-                : 'Încărcarea și eliminarea fotografiilor necesită Firebase Storage activat și storageBucket configurat.';
 
             const existingContainer = document.getElementById('project-gallery-existing');
             existingContainer.replaceChildren();
             projectGalleryDraft.forEach((image, index) => {
                 const row = document.createElement('div');
-                row.className = 'grid grid-cols-1 sm:grid-cols-[1fr_10rem_auto] gap-2 rounded-xl border border-slate-800 bg-slate-950 p-3';
+                row.className = 'space-y-2 rounded-xl border border-slate-800 bg-slate-950 p-3';
+
+                const url = document.createElement('input');
+                url.type = 'url';
+                url.value = image.url || '';
+                url.placeholder = 'https://subdomeniu.imgix.net/cale/imagine.webp';
+                url.setAttribute('aria-label', `URL Imgix pentru fotografia ${index + 1}`);
+                url.className = 'w-full min-w-0 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white';
+                url.addEventListener('input', () => { image.url = url.value; });
 
                 const label = document.createElement('input');
                 label.type = 'text';
                 label.maxLength = 80;
                 label.value = image.label || '';
-                label.placeholder = 'Etapă (ex. Înainte, În timpul lucrărilor)';
+                label.placeholder = 'Etapă / perioadă (opțional)';
                 label.setAttribute('aria-label', `Etapa fotografiei ${index + 1}`);
                 label.className = 'min-w-0 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white';
                 label.addEventListener('input', () => { image.label = label.value; });
@@ -1173,6 +1161,28 @@
                 date.className = 'rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white';
                 date.addEventListener('change', () => { image.date = date.value; });
 
+                const moveEarlier = document.createElement('button');
+                moveEarlier.type = 'button';
+                moveEarlier.textContent = '↑';
+                moveEarlier.disabled = index === 0;
+                moveEarlier.setAttribute('aria-label', `Mută fotografia ${index + 1} mai devreme`);
+                moveEarlier.className = 'rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 disabled:opacity-40';
+                moveEarlier.addEventListener('click', () => {
+                    projectGalleryDraft = window.ISYOUTH_GALLERY.moveGalleryImage(projectGalleryDraft, index, -1);
+                    renderProjectGalleryEditor();
+                });
+
+                const moveLater = document.createElement('button');
+                moveLater.type = 'button';
+                moveLater.textContent = '↓';
+                moveLater.disabled = index === projectGalleryDraft.length - 1;
+                moveLater.setAttribute('aria-label', `Mută fotografia ${index + 1} mai târziu`);
+                moveLater.className = 'rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 disabled:opacity-40';
+                moveLater.addEventListener('click', () => {
+                    projectGalleryDraft = window.ISYOUTH_GALLERY.moveGalleryImage(projectGalleryDraft, index, 1);
+                    renderProjectGalleryEditor();
+                });
+
                 const remove = document.createElement('button');
                 remove.type = 'button';
                 remove.textContent = 'Elimină';
@@ -1180,122 +1190,38 @@
                 remove.className = 'rounded-lg border border-rose-500/30 px-3 py-2 text-xs font-bold text-rose-300';
                 remove.addEventListener('click', () => {
                     projectGalleryDraft.splice(index, 1);
+                    projectGalleryDraft = projectGalleryDraft.map((item, order) => ({ ...item, order }));
                     renderProjectGalleryEditor();
                 });
 
-                row.append(label, date, remove);
+                const metadata = document.createElement('div');
+                metadata.className = 'grid grid-cols-1 gap-2 sm:grid-cols-[1fr_10rem_auto_auto_auto]';
+                metadata.append(label, date, moveEarlier, moveLater, remove);
+                row.append(url, metadata);
                 existingContainer.appendChild(row);
-            });
-
-            const pendingContainer = document.getElementById('project-gallery-pending');
-            pendingContainer.replaceChildren();
-            projectGalleryPendingFiles.forEach((pending, index) => {
-                const row = document.createElement('div');
-                row.className = 'space-y-2 rounded-xl border border-fuchsia-500/20 bg-slate-950 p-3';
-
-                const description = document.createElement('span');
-                description.className = 'self-center truncate text-xs text-slate-300';
-                description.textContent = pending.file.name;
-
-                const label = document.createElement('input');
-                label.type = 'text';
-                label.maxLength = 80;
-                label.value = pending.label;
-                label.placeholder = 'Etapă opțională';
-                label.setAttribute('aria-label', `Etapa fotografiei noi ${index + 1}`);
-                label.className = 'rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white';
-                label.addEventListener('input', () => { pending.label = label.value; });
-
-                const date = document.createElement('input');
-                date.type = 'date';
-                date.value = pending.date;
-                date.setAttribute('aria-label', `Data fotografiei noi ${index + 1}`);
-                date.className = 'rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white';
-                date.addEventListener('change', () => { pending.date = date.value; });
-
-                const remove = document.createElement('button');
-                remove.type = 'button';
-                remove.textContent = 'Anulează';
-                remove.setAttribute('aria-label', `Anulează fotografia nouă ${index + 1}`);
-                remove.className = 'rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300';
-                remove.addEventListener('click', () => {
-                    projectGalleryPendingFiles.splice(index, 1);
-                    renderProjectGalleryEditor();
-                });
-
-                const rowLabel = document.createElement('div');
-                rowLabel.className = 'grid grid-cols-1 sm:grid-cols-[1fr_10rem_auto] gap-2';
-                rowLabel.append(label, date, remove);
-                row.append(description, rowLabel);
-                pendingContainer.appendChild(row);
             });
         }
 
-        function handleGalleryFileSelection(event) {
-            const files = Array.from(event.target.files || []);
+        function addGalleryImageUrl() {
+            const input = document.getElementById('edit-gallery-image-url');
             try {
-                if (projectGalleryDraft.length + projectGalleryPendingFiles.length + files.length >
-                    window.ISYOUTH_GALLERY.maxGalleryImages) {
+                if (projectGalleryDraft.length >= window.ISYOUTH_GALLERY.maxGalleryImages) {
                     throw new RangeError('Galeria poate avea cel mult 12 fotografii.');
                 }
-                files.forEach(file => window.ISYOUTH_GALLERY.validateImageFile(file));
-                projectGalleryPendingFiles.push(...files.map(file => ({ file, label: '', date: '' })));
+                const url = window.ISYOUTH_GALLERY.validateImgixUrl(input.value);
+                projectGalleryDraft.push({
+                    id: crypto.randomUUID(),
+                    url,
+                    label: '',
+                    date: '',
+                    order: projectGalleryDraft.length,
+                    isNew: true
+                });
+                input.value = '';
                 renderProjectGalleryEditor();
             } catch (error) {
                 showToast(error.message);
             }
-            event.target.value = '';
-        }
-
-        async function uploadGalleryImages(projectId) {
-            const uploaded = [];
-            try {
-                for (const pending of projectGalleryPendingFiles) {
-                    const id = crypto.randomUUID();
-                    const storagePath = `project-galleries/${encodeURIComponent(projectId)}/${id}`;
-                    const reference = firebaseStorage.ref().child(storagePath);
-                    const snapshot = await reference.put(pending.file, {
-                        contentType: pending.file.type,
-                        cacheControl: 'public,max-age=31536000,immutable'
-                    });
-                    const image = {
-                        id,
-                        storagePath,
-                        url: '',
-                        label: pending.label.trim(),
-                        date: pending.date
-                    };
-                    uploaded.push(image);
-                    image.url = await snapshot.ref.getDownloadURL();
-                }
-                return uploaded;
-            } catch (error) {
-                const failedCleanup = await deleteGalleryStorageImages(uploaded);
-                if (failedCleanup.length) {
-                    console.error('Unele fotografii încărcate parțial nu au putut fi eliminate:', failedCleanup, error);
-                    throw new Error('Încărcarea a eșuat, iar unele fișiere temporare nu au putut fi eliminate.');
-                }
-                throw error;
-            }
-        }
-
-        async function deleteGalleryStorageImages(images) {
-            if (!images.length) return [];
-            if (!firebaseStorage) {
-                console.error('Firebase Storage nu este configurat; fotografiile nu au putut fi eliminate.');
-                return images;
-            }
-
-            const failed = [];
-            for (const image of images) {
-                try {
-                    await firebaseStorage.ref().child(image.storagePath).delete();
-                } catch (error) {
-                    console.error(`Nu s-a putut elimina fotografia ${image.storagePath}:`, error);
-                    failed.push(image);
-                }
-            }
-            return failed;
         }
 
         function renderApp() {
@@ -1456,14 +1382,16 @@
             const proj = projects.find(p => p.id === id);
             if (!proj) return;
 
-            try {
-                projectGalleryDraft = window.ISYOUTH_GALLERY.normalizeGallery(proj.gallery || []);
-            } catch (error) {
-                console.error('Galeria proiectului este invalidă:', error);
-                showToast("Galeria acestui proiect conține date invalide și nu poate fi editată.");
-                return;
-            }
-            projectGalleryPendingFiles = [];
+            const savedGallery = Array.isArray(proj.gallery) ? proj.gallery : [];
+            projectGalleryDraft = window.ISYOUTH_GALLERY.sortGalleryChronologically(savedGallery.map((image, index) => ({
+                id: image && typeof image.id === 'string' && image.id.trim()
+                    ? image.id
+                    : `legacy-${index}-${crypto.randomUUID()}`,
+                url: image && typeof image.url === 'string' ? image.url : '',
+                label: image && typeof image.label === 'string' ? image.label : '',
+                date: image && typeof image.date === 'string' ? image.date : '',
+                ...(image && Number.isInteger(image.order) ? { order: image.order } : {})
+            }))).map((image, order) => ({ ...image, order }));
             document.getElementById('edit-modal-title').innerText = "Editare Proiect: " + proj.title;
             document.getElementById('edit-project-id').value = proj.id;
             document.getElementById('edit-title').value = proj.title;
@@ -1474,7 +1402,7 @@
             document.getElementById('edit-status').value = proj.status;
             document.getElementById('edit-image').value = proj.image;
             document.getElementById('edit-gallery-enabled').checked = proj.galleryEnabled === true;
-            document.getElementById('edit-gallery-files').value = '';
+            document.getElementById('edit-gallery-image-url').value = '';
             renderProjectGalleryEditor();
 
             document.getElementById('modal-edit-project').classList.remove('hidden');
@@ -1482,7 +1410,6 @@
 
         function openNewProjectModal() {
             projectGalleryDraft = [];
-            projectGalleryPendingFiles = [];
             document.getElementById('edit-modal-title').innerText = "Adaugă Proiect Nou ISYouth";
             document.getElementById('edit-project-id').value = "new_" + Date.now();
             document.getElementById('edit-project-form').reset();
@@ -1490,7 +1417,7 @@
             document.getElementById('edit-category').value = "ISYouth";
             document.getElementById('edit-status').value = "active";
             document.getElementById('edit-image').value = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80";
-            document.getElementById('edit-gallery-files').value = '';
+            document.getElementById('edit-gallery-image-url').value = '';
             renderProjectGalleryEditor();
 
             document.getElementById('modal-edit-project').classList.remove('hidden');
@@ -1537,22 +1464,18 @@
 
             const existingIndex = projects.findIndex(p => p.id === id);
             const existingProject = existingIndex === -1 ? null : projects[existingIndex];
-            if (projectGalleryPendingFiles.length && status !== 'completed') {
-                showToast("Fotografiile cronologice pot fi salvate doar pentru proiecte finalizate.");
+            const hasNewGalleryImages = projectGalleryDraft.some(galleryImage => galleryImage.isNew);
+            if (hasNewGalleryImages && status !== 'completed') {
+                showToast("Fotografiile galeriei pot fi salvate doar pentru proiecte finalizate.");
                 return;
             }
-            if (projectGalleryPendingFiles.length && !document.getElementById('edit-gallery-enabled').checked) {
-                showToast("Activează afișarea galeriei înainte de a încărca fotografii.");
-                return;
-            }
-            if (projectGalleryPendingFiles.length && !firebaseStorage) {
-                showToast("Firebase Storage nu este configurat. Adaugă storageBucket și configurează bucket-ul.");
+            if (hasNewGalleryImages && !document.getElementById('edit-gallery-enabled').checked) {
+                showToast("Activează afișarea galeriei înainte de a adăuga fotografii.");
                 return;
             }
 
             let gallery = existingProject && Array.isArray(existingProject.gallery) ? existingProject.gallery : [];
             let galleryEnabled = existingProject && existingProject.galleryEnabled === true;
-            let removedGalleryImages = [];
             if (status === 'completed') {
                 try {
                     gallery = window.ISYOUTH_GALLERY.normalizeGallery(projectGalleryDraft);
@@ -1561,35 +1484,6 @@
                     return;
                 }
                 galleryEnabled = document.getElementById('edit-gallery-enabled').checked;
-                if (gallery.length + projectGalleryPendingFiles.length > window.ISYOUTH_GALLERY.maxGalleryImages) {
-                    showToast("Galeria poate avea cel mult 12 fotografii.");
-                    return;
-                }
-                const remainingPaths = new Set(gallery.map(image => image.storagePath));
-                removedGalleryImages = (existingProject && Array.isArray(existingProject.gallery)
-                    ? existingProject.gallery
-                    : []).filter(image => !remainingPaths.has(image.storagePath));
-                if (!canManageGalleryFiles(removedGalleryImages)) return;
-            }
-
-            let uploadedGalleryImages = [];
-            if (projectGalleryPendingFiles.length) {
-                try {
-                    uploadedGalleryImages = await uploadGalleryImages(id);
-                    gallery = window.ISYOUTH_GALLERY.normalizeGallery([...gallery, ...uploadedGalleryImages]);
-                } catch (error) {
-                    if (uploadedGalleryImages.length) {
-                        const failedCleanup = await deleteGalleryStorageImages(uploadedGalleryImages);
-                        if (failedCleanup.length) {
-                            console.error('Unele fotografii invalide încărcate nu au putut fi eliminate:', failedCleanup);
-                            showToast("Încărcarea a eșuat; unele fișiere temporare trebuie eliminate manual din Storage.");
-                            return;
-                        }
-                    }
-                    console.error('Încărcarea galeriei a eșuat:', error);
-                    showToast(error.message || "Încărcarea fotografiilor a eșuat. Verifică Firebase Storage și permisiunile.");
-                    return;
-                }
             }
 
             const raised = existingIndex === -1 ? 0 : projects[existingIndex].raised;
@@ -1611,32 +1505,17 @@
             }
 
             if (await saveState()) {
-                projectGalleryPendingFiles = [];
                 projectGalleryDraft = [];
                 closeEditModal();
-                const failedCleanup = await deleteGalleryStorageImages(removedGalleryImages);
-                showToast(failedCleanup.length
-                    ? "Proiect salvat, dar unele fotografii eliminate au rămas în Storage."
-                    : "Proiect salvat cu succes!");
-            } else {
-                const failedCleanup = await deleteGalleryStorageImages(uploadedGalleryImages);
-                if (failedCleanup.length) {
-                    showToast("Salvarea a eșuat și unele fotografii încărcate trebuie eliminate manual din Storage.");
-                }
+                showToast("Proiect salvat cu succes!");
             }
         }
 
         async function deleteProject(id) {
             if (confirm("Sigur dorești să ștergi acest proiect?")) {
-                const project = projects.find(item => item.id === id);
-                const galleryImages = project && Array.isArray(project.gallery) ? project.gallery : [];
-                if (!canManageGalleryFiles(galleryImages)) return;
                 projects = projects.filter(p => p.id !== id);
                 if (await saveState()) {
-                    const failedCleanup = await deleteGalleryStorageImages(galleryImages);
-                    showToast(failedCleanup.length
-                        ? "Proiect șters, dar unele fotografii au rămas în Storage."
-                        : "Proiect șters!");
+                    showToast("Proiect șters!");
                 }
             }
         }
