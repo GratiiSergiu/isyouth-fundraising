@@ -93,6 +93,7 @@
             height: min(42vh, 28rem);
             height: min(42dvh, 28rem);
             object-fit: contain;
+            touch-action: pan-y;
         }
         @media (max-width: 639px) {
             #modal-project-details {
@@ -519,7 +520,7 @@
                     <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
                         <img id="project-gallery-image" alt="" class="bg-slate-950">
                         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 p-4">
-                            <div aria-live="polite" aria-atomic="true">
+                            <div>
                                 <p id="project-gallery-stage" class="font-bold text-white"></p>
                                 <p id="project-gallery-date" class="mt-1 text-xs text-slate-400"></p>
                             </div>
@@ -527,7 +528,7 @@
                                 <button id="project-gallery-previous" type="button" onclick="moveProjectGallery(-1)" aria-label="Fotografia anterioară" class="h-10 w-10 rounded-xl border border-slate-700 bg-slate-900 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-fuchsia-400">
                                     <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
                                 </button>
-                                <span id="project-gallery-position" class="min-w-14 text-center text-xs font-semibold text-slate-400" aria-hidden="true"></span>
+                                <span id="project-gallery-position" class="min-w-14 text-center text-xs font-semibold text-slate-400" aria-live="polite" aria-atomic="true"></span>
                                 <button id="project-gallery-next" type="button" onclick="moveProjectGallery(1)" aria-label="Fotografia următoare" class="h-10 w-10 rounded-xl border border-slate-700 bg-slate-900 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-fuchsia-400">
                                     <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                                 </button>
@@ -1564,12 +1565,21 @@
                     .format(new Date(`${photo.date}T00:00:00`))
                 : '';
             document.getElementById('project-gallery-position').textContent =
-                `${projectDetailsGalleryIndex + 1} / ${gallery.length}`;
+                `${projectDetailsGalleryIndex + 1} din ${gallery.length}`;
             document.getElementById('project-gallery-controls').classList.toggle('hidden', gallery.length < 2);
         }
 
         function moveProjectGallery(direction) {
-            projectDetailsGalleryIndex += direction;
+            const project = projects.find(item => item.id === projectDetailsProjectId);
+            const gallery = project && window.ISYOUTH_GALLERY.canShowGallery(project)
+                ? window.ISYOUTH_GALLERY.sortGalleryChronologically(project.gallery)
+                : [];
+            if (gallery.length < 2) return;
+            projectDetailsGalleryIndex = window.ISYOUTH_GALLERY.getGalleryIndex(
+                projectDetailsGalleryIndex,
+                direction,
+                gallery.length
+            );
             showProjectGallerySlide();
         }
 
@@ -1612,6 +1622,17 @@
                 closeProjectDetails();
                 return;
             }
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                const project = projects.find(item => item.id === projectDetailsProjectId);
+                const gallery = project && window.ISYOUTH_GALLERY.canShowGallery(project)
+                    ? window.ISYOUTH_GALLERY.sortGalleryChronologically(project.gallery)
+                    : [];
+                if (gallery.length > 1) {
+                    event.preventDefault();
+                    moveProjectGallery(event.key === 'ArrowLeft' ? -1 : 1);
+                }
+                return;
+            }
             if (event.key !== 'Tab') return;
 
             const focusableElements = document.getElementById('modal-project-details')
@@ -1628,6 +1649,35 @@
                 firstElement.focus();
             }
         });
+
+        let projectGalleryTouchStart = null;
+        const projectGalleryImage = document.getElementById('project-gallery-image');
+        projectGalleryImage.addEventListener('touchstart', event => {
+            if (event.touches.length !== 1) {
+                projectGalleryTouchStart = null;
+                return;
+            }
+            const touch = event.touches[0];
+            projectGalleryTouchStart = { x: touch.clientX, y: touch.clientY };
+        }, { passive: true });
+        projectGalleryImage.addEventListener('touchend', event => {
+            if (!projectGalleryTouchStart || event.changedTouches.length !== 1) {
+                projectGalleryTouchStart = null;
+                return;
+            }
+            const touch = event.changedTouches[0];
+            const direction = window.ISYOUTH_GALLERY.getSwipeDirection(
+                projectGalleryTouchStart.x,
+                projectGalleryTouchStart.y,
+                touch.clientX,
+                touch.clientY
+            );
+            projectGalleryTouchStart = null;
+            if (direction) moveProjectGallery(direction);
+        }, { passive: true });
+        projectGalleryImage.addEventListener('touchcancel', () => {
+            projectGalleryTouchStart = null;
+        }, { passive: true });
 
         function openDonateModal(id) {
             const proj = projects.find(p => p.id === id);

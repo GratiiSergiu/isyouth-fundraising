@@ -2,6 +2,8 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
     canShowGallery,
+    getGalleryIndex,
+    getSwipeDirection,
     maxGalleryImages,
     moveGalleryImage,
     normalizeGallery,
@@ -76,4 +78,19 @@ test('uses saved manual order and updates it when moving a photo', () => {
     assert.deepEqual(reordered.map(photo => [photo.id, photo.order]), [['second', 0], ['first', 1]]);
     assert.deepEqual(sortGalleryChronologically(reordered).map(photo => photo.id), ['second', 'first']);
     assert.deepEqual(gallery.map(photo => photo.id), ['first', 'second']);
+});
+
+test('navigates gallery slides in either direction and wraps at both ends', () => {
+    assert.equal(getGalleryIndex(0, -1, 5), 4);
+    assert.equal(getGalleryIndex(4, 1, 5), 0);
+    assert.equal(getGalleryIndex(2, 1, 5), 3);
+    assert.throws(() => getGalleryIndex(0, 1, 0), RangeError);
+});
+
+test('recognizes decisive horizontal swipes while ignoring taps and vertical gestures', () => {
+    assert.equal(getSwipeDirection(120, 20, 60, 24), 1);
+    assert.equal(getSwipeDirection(60, 20, 120, 24), -1);
+    assert.equal(getSwipeDirection(100, 20, 75, 22), 0);
+    assert.equal(getSwipeDirection(100, 20, 70, 90), 0);
+    assert.equal(getSwipeDirection(0, 0, Infinity, 0), 0);
 });
