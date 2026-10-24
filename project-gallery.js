@@ -109,12 +109,30 @@
         return reordered.map((image, order) => ({ ...image, order }));
     }
 
+    function getGalleryIndex(index, direction, length) {
+        if (!Number.isInteger(index) || !Number.isInteger(length) || length < 1 ||
+            index < 0 || index >= length || (direction !== -1 && direction !== 1)) {
+            throw new RangeError('Poziția fotografiei pentru navigare este invalidă.');
+        }
+        return (index + direction + length) % length;
+    }
+
+    function getSwipeDirection(startX, startY, endX, endY) {
+        if (![startX, startY, endX, endY].every(Number.isFinite)) return 0;
+        const deltaX = endX - startX;
+        const deltaY = endY - startY;
+        if (Math.abs(deltaX) < 40 || Math.abs(deltaX) <= Math.abs(deltaY)) return 0;
+        return deltaX < 0 ? 1 : -1;
+    }
+
     return {
         maxGalleryImages,
         validateImgixUrl,
         normalizeGallery,
         canShowGallery,
         sortGalleryChronologically,
-        moveGalleryImage
+        moveGalleryImage,
+        getGalleryIndex,
+        getSwipeDirection
     };
 });
