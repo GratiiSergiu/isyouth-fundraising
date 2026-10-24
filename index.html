@@ -182,7 +182,7 @@
                     </div>
                     <div class="p-3 text-center sm:border-r border-slate-800">
                         <span class="text-[11px] uppercase tracking-wider font-bold text-slate-400">Proiecte Active</span>
-                        <div class="text-2xl sm:text-3xl font-black text-fuchsia-400 mt-1" id="stat-active">0 Cauze</div>
+                        <div class="text-2xl sm:text-3xl font-black text-fuchsia-400 mt-1" id="stat-active">0 Inițiative</div>
                         <span class="text-xs text-slate-400 font-medium mt-1 inline-block">Nevoie imediată</span>
                     </div>
                     <div class="p-3 text-center">
@@ -320,7 +320,7 @@
             <div class="mb-8 text-center">
                 <div>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Proiecte În Curs de Fundraising</h2>
-                    <p class="text-slate-400 mt-1">Alege cauza din comunitatea ISYouth pe care dorești să o susții azi.</p>
+                    <p class="text-slate-400 mt-1">Alege inițiativa din comunitatea ISYouth pe care dorești să o susții azi.</p>
                 </div>
             </div>
 
@@ -1254,7 +1254,8 @@
             });
 
             document.getElementById('stat-total').innerText = `${formatMdl(totalRaisedAll)} MDL`;
-            document.getElementById('stat-active').innerText = `${activeCount} Cauze`;
+            document.getElementById('stat-active').innerText =
+                `${activeCount} ${activeCount === 1 ? 'Inițiativă' : 'Inițiative'}`;
             document.getElementById('stat-completed').innerText = `${completedCount} Realizate`;
         }
 
