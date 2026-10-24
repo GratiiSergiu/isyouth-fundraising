@@ -1595,6 +1595,10 @@
             document.getElementById('project-details-category').textContent = project.category || 'Proiect ISYouth';
             document.getElementById('project-details-teaser').textContent = project.shortDescription;
             document.getElementById('project-details-description').textContent = project.fullDescription;
+            document.getElementById('project-details-support').classList.toggle(
+                'hidden',
+                !window.ISYOUTH_PROJECTS.canReceiveDonations(project)
+            );
             const image = document.getElementById('project-details-image');
             image.alt = project.title;
             image.onerror = () => {
@@ -1681,9 +1685,13 @@
 
         function openDonateModal(id) {
             const proj = projects.find(p => p.id === id);
-            if (proj) {
-                document.getElementById('modal-project-title').innerText = proj.title;
+            if (!window.ISYOUTH_PROJECTS.canReceiveDonations(proj)) {
+                if (proj && proj.status === 'completed') {
+                    showToast("Acest proiect a fost finalizat și nu mai acceptă donații.");
+                }
+                return;
             }
+            document.getElementById('modal-project-title').innerText = proj.title;
             donateModalReturnFocus = document.activeElement;
             lockModalPageScroll();
             document.getElementById('modal-donate').classList.remove('hidden');
@@ -1693,6 +1701,8 @@
         function supportProjectDetails() {
             if (!projectDetailsProjectId) return;
             const projectId = projectDetailsProjectId;
+            const project = projects.find(item => item.id === projectId);
+            if (!window.ISYOUTH_PROJECTS.canReceiveDonations(project)) return;
             closeProjectDetails();
             openDonateModal(projectId);
         }
