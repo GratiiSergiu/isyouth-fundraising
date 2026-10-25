@@ -23,10 +23,12 @@
 
         const totalsByProject = new Map();
         payload.forEach((entry, index) => {
+            const hasLastDonation = entry && Object.prototype.hasOwnProperty.call(entry, 'lastDonation');
             if (!entry || typeof entry !== 'object' ||
-                Object.keys(entry).length !== 2 ||
+                (Object.keys(entry).length !== 2 && Object.keys(entry).length !== 3) ||
                 !Object.prototype.hasOwnProperty.call(entry, 'project') ||
-                !Object.prototype.hasOwnProperty.call(entry, 'totalMdl')) {
+                !Object.prototype.hasOwnProperty.call(entry, 'totalMdl') ||
+                (Object.keys(entry).length === 3 && !hasLastDonation)) {
                 throw new Error(`Totalul de pe poziția ${index + 1} conține date invalide.`);
             }
             if (typeof entry.project !== 'string' || !entry.project.trim() ||
@@ -36,10 +38,18 @@
             if (typeof entry.totalMdl !== 'number' || !Number.isFinite(entry.totalMdl) || entry.totalMdl < 0) {
                 throw new Error(`Totalul MDL pentru „${entry.project}” trebuie să fie un număr pozitiv sau zero.`);
             }
+            if (hasLastDonation &&
+                (typeof entry.lastDonation !== 'string' ||
+                    (entry.lastDonation !== '' && !isIsoDate(entry.lastDonation)))) {
+                throw new Error(`Data ultimei donații pentru „${entry.project}” este invalidă.`);
+            }
             if (totalsByProject.has(entry.project)) {
                 throw new Error(`Proiectul „${entry.project}” apare de mai multe ori în totalurile Google Sheets.`);
             }
-            totalsByProject.set(entry.project, entry.totalMdl);
+            totalsByProject.set(entry.project, {
+                totalMdl: entry.totalMdl,
+                lastDonation: hasLastDonation ? entry.lastDonation : ''
+            });
         });
 
         const siteProjectNames = new Set();
@@ -60,8 +70,26 @@
 
         return projects.map(project => ({
             ...project,
-            raised: totalsByProject.get(project.title)
+            raised: totalsByProject.get(project.title).totalMdl,
+            ...(totalsByProject.get(project.title).lastDonation
+                ? { lastDonation: formatDonationDate(totalsByProject.get(project.title).lastDonation) }
+                : {})
         }));
+    }
+
+    function isIsoDate(value) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+        const date = new Date(`${value}T00:00:00.000Z`);
+        return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+    }
+
+    function formatDonationDate(value) {
+        return new Intl.DateTimeFormat('ro-RO', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'UTC'
+        }).format(new Date(`${value}T00:00:00.000Z`));
     }
 
     const api = { isAppsScriptEndpoint, applyTotals };

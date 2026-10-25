@@ -48,6 +48,7 @@ function getProjectTotals_() {
 
   var table = tables[0];
   var lastRow = table.sheet.getLastRow();
+  var lastDonationDates = getLatestDonationDates_(spreadsheet);
   if (lastRow <= table.headerRow) {
     return [];
   }
@@ -79,10 +80,86 @@ function getProjectTotals_() {
     }
 
     names.add(project);
-    totals.push({ project: project, totalMdl: totalMdl });
+    totals.push({
+      project: project,
+      totalMdl: totalMdl,
+      lastDonation: lastDonationDates[project] || ''
+    });
   }
 
   return totals;
+}
+
+function getLatestDonationDates_(spreadsheet) {
+  var latestByProject = Object.create(null);
+  var timeZone = spreadsheet.getSpreadsheetTimeZone();
+
+  spreadsheet.getSheets().forEach(function (sheet) {
+    var dateHeaders = sheet.createTextFinder('Date')
+      .matchCase(true)
+      .matchEntireCell(true)
+      .findAll();
+    var projectHeaders = sheet.createTextFinder('Project')
+      .matchCase(true)
+      .matchEntireCell(true)
+      .findAll();
+
+    dateHeaders.forEach(function (dateHeader) {
+      projectHeaders.forEach(function (projectHeader) {
+        if (projectHeader.getRow() !== dateHeader.getRow()) {
+          return;
+        }
+
+        var headerRow = dateHeader.getRow();
+        var lastRow = sheet.getLastRow();
+        if (lastRow <= headerRow) {
+          return;
+        }
+
+        var rowCount = lastRow - headerRow;
+        var dates = sheet.getRange(headerRow + 1, dateHeader.getColumn(), rowCount, 1).getValues();
+        var projects = sheet.getRange(headerRow + 1, projectHeader.getColumn(), rowCount, 1).getValues();
+        for (var i = 0; i < rowCount; i++) {
+          var project = projects[i][0];
+          var dateValue = dates[i][0];
+          if (project === '' || project === null || project === undefined ||
+              dateValue === '' || dateValue === null || dateValue === undefined) {
+            continue;
+          }
+          if (typeof project !== 'string' || !project.trim() || project !== project.trim()) {
+            throw new Error('Numele proiectului din registrul donațiilor este invalid (rând ' + (headerRow + i + 1) + ').');
+          }
+
+          var donationDate = normalizeDonationDate_(dateValue, timeZone, headerRow + i + 1);
+          if (!latestByProject[project] || donationDate > latestByProject[project]) {
+            latestByProject[project] = donationDate;
+          }
+        }
+      });
+    });
+  });
+
+  return latestByProject;
+}
+
+function normalizeDonationDate_(value, timeZone, row) {
+  if (value && typeof value.getTime === 'function') {
+    if (!isFinite(value.getTime())) {
+      throw new Error('Data donației este invalidă (rând ' + row + ').');
+    }
+    return Utilities.formatDate(value, timeZone, 'yyyy-MM-dd');
+  }
+
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    var parsedDate = new Date(value + 'T00:00:00.000Z');
+    if (!isFinite(parsedDate.getTime()) ||
+        Utilities.formatDate(parsedDate, 'UTC', 'yyyy-MM-dd') !== value) {
+      throw new Error('Data donației trebuie să fie o dată validă (rând ' + row + ').');
+    }
+    return value;
+  }
+
+  throw new Error('Data donației trebuie să fie o dată Google Sheets sau în formatul AAAA-LL-ZZ (rând ' + row + ').');
 }
 
 function createResponse_(data, callback) {
