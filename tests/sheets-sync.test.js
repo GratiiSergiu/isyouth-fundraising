@@ -57,11 +57,22 @@ function makeSheet(name, values) {
 function callEndpoint(sheets, parameters) {
     const context = {
         SpreadsheetApp: {
-            getActiveSpreadsheet: () => ({ getSheets: () => sheets }),
-            openById: () => ({ getSheets: () => sheets })
+            getActiveSpreadsheet: () => ({
+                getSheets: () => sheets,
+                getSpreadsheetTimeZone: () => 'UTC'
+            }),
+            openById: () => ({
+                getSheets: () => sheets,
+                getSpreadsheetTimeZone: () => 'UTC'
+            })
         },
         PropertiesService: {
             getScriptProperties: () => ({ getProperty: () => 'mock-sheet-id' })
+        },
+        Utilities: {
+            formatDate(date) {
+                return date.toISOString().slice(0, 10);
+            }
         },
         ContentService: {
             MimeType: { JSON: 'application/json', JAVASCRIPT: 'application/javascript' },
@@ -101,18 +112,39 @@ function makeOutputSheet(rows) {
 test('locates the exact output headers on any tab and returns aggregates only', () => {
     const privateRegister = makeSheet('Donations', [
         ['Date', 'Donator', 'Amount', 'CCY', 'Project', 'MDL Amount'],
-        ['2026-10-01', 'Private Donor', 100, 'MDL', 'Project A', 100]
+        ['2026-10-01', 'Private Donor', 100, 'MDL', 'Project A', 100],
+        ['2026-10-22', 'Another Private Donor', 25, 'MDL', 'Project A', 25],
+        ['2026-10-18', 'Third Private Donor', 50, 'MDL', 'Project B', 50]
     ]);
     const output = makeOutputSheet([['Project A', 1250], ['Project B', 0]]);
     const callback = 'window.result';
     const result = parseResponse(callEndpoint([privateRegister, output], { callback }), callback);
 
     assert.deepEqual(result, [
-        { project: 'Project A', totalMdl: 1250 },
-        { project: 'Project B', totalMdl: 0 }
+        { project: 'Project A', totalMdl: 1250, lastDonation: '2026-10-22' },
+        { project: 'Project B', totalMdl: 0, lastDonation: '2026-10-18' }
     ]);
     assert.equal(JSON.stringify(result).includes('Private Donor'), false);
-    assert.equal(result.some(row => Object.keys(row).some(key => /donor|date|amount|ccy/i.test(key))), false);
+    assert.deepEqual(Object.keys(result[0]), ['project', 'totalMdl', 'lastDonation']);
+    assert.equal(result.some(row => Object.keys(row).some(key => /donor|amount|ccy/i.test(key))), false);
+});
+
+test('returns an empty donation date when no private register date table exists', () => {
+    const result = parseResponse(callEndpoint([makeOutputSheet([['Project A', 100]])]));
+    assert.deepEqual(result, [{ project: 'Project A', totalMdl: 100, lastDonation: '' }]);
+});
+
+test('uses spreadsheet-local dates from Google Sheets date cells', () => {
+    const spreadsheetDate = vm.runInNewContext('new Date("2026-10-24T20:00:00.000Z")');
+    const register = makeSheet('Donations', [
+        ['Date', 'Donator', 'Amount', 'CCY', 'Project', 'MDL Amount'],
+        [spreadsheetDate, 'Private Donor', 100, 'MDL', 'Project A', 100]
+    ]);
+
+    assert.deepEqual(
+        parseResponse(callEndpoint([register, makeOutputSheet([['Project A', 100]])])),
+        [{ project: 'Project A', totalMdl: 100, lastDonation: '2026-10-24' }]
+    );
 });
 
 test('requires one uniquely detected output table', () => {
@@ -151,10 +183,12 @@ test('validates aggregate shape, exact project matching, and all site totals bef
         { id: 'b', title: 'Project B', target: 900, raised: 20 }
     ];
     const updated = applyTotals(projects, [
-        { project: 'Project A', totalMdl: 125 },
-        { project: 'Project B', totalMdl: 0 }
+        { project: 'Project A', totalMdl: 125, lastDonation: '2026-10-25' },
+        { project: 'Project B', totalMdl: 0, lastDonation: '' }
     ]);
     assert.deepEqual(updated.map(project => project.raised), [125, 0]);
+    assert.equal(updated[0].lastDonation, '25 octombrie 2026');
+    assert.equal(updated[1].lastDonation, undefined);
     assert.deepEqual(projects.map(project => project.raised), [10, 20]);
 
     assert.throws(
@@ -170,11 +204,26 @@ test('validates aggregate shape, exact project matching, and all site totals bef
         /date invalide/
     );
     assert.throws(
+        () => applyTotals(projects, [
+            { project: 'Project A', totalMdl: 125, lastDonation: '2026-02-30' },
+            { project: 'Project B', totalMdl: 20, lastDonation: '' }
+        ]),
+        /data ultimei donații.*invalidă/i
+    );
+    assert.throws(
         () => applyTotals([projects[0], { ...projects[1], title: 'Project A' }], [
             { project: 'Project A', totalMdl: 125 }
         ]),
         /duplicat/
     );
+});
+
+test('keeps stored donation dates when an older endpoint only returns totals', () => {
+    const projects = [{ id: 'a', title: 'Project A', raised: 10, lastDonation: '23 octombrie 2026' }];
+    const [updated] = applyTotals(projects, [{ project: 'Project A', totalMdl: 125 }]);
+
+    assert.equal(updated.raised, 125);
+    assert.equal(updated.lastDonation, '23 octombrie 2026');
 });
 
 test('accepts only the Apps Script deployment URL format', () => {

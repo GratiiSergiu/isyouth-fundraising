@@ -557,12 +557,12 @@
                 <i class="fa-solid fa-file-excel text-3xl"></i>
                 <h3 class="text-2xl font-bold text-white">Google Sheets Integration</h3>
             </div>
-            <p class="text-slate-400 text-xs">Site-ul citește numai numele proiectelor și totalurile MDL; registrul privat cu donații individuale și donatori nu este returnat.</p>
+            <p class="text-slate-400 text-xs">Site-ul citește numai numele proiectelor, totalurile MDL și data ultimei donații pentru fiecare proiect; registrul privat cu donații individuale și donatori nu este returnat.</p>
 
             <div class="mt-5 p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
                 <label for="sheet-url-input" class="block text-xs font-bold text-slate-400 uppercase">URL Web App Google Apps Script</label>
                 <p class="text-xs text-slate-300 leading-relaxed">
-                    Se citește tabelul cu antetele exacte „Project” și „Total, MDL”, indiferent de fila în care se află. Numele proiectelor din site trebuie să fie identice; țintele și celelalte detalii rămân administrate aici.
+                    Se citesc totalurile din tabelul cu antetele exacte „Project” și „Total, MDL”, indiferent de fila în care se află. Data ultimei donații se calculează din registrul cu coloanele „Date” și „Project”. Numele proiectelor din site și din tabel trebuie să fie identice; țintele și celelalte detalii rămân administrate aici.
                 </p>
                 <input type="url" id="sheet-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white">
                 <p id="sheet-sync-status" class="text-xs text-slate-400" aria-live="polite">Sincronizarea nu a fost configurată.</p>
@@ -1847,7 +1847,7 @@
             sheetSyncInProgress = true;
             const status = document.getElementById('sheet-sync-status');
             const requestedEndpoint = sheetsEndpoint;
-            if (status) status.textContent = 'Se încarcă totalurile din Google Sheets…';
+            if (status) status.textContent = 'Se încarcă totalurile și datele ultimei donații din Google Sheets…';
             try {
                 const payload = await fetchSheetTotals(requestedEndpoint);
                 if (sheetsEndpoint !== requestedEndpoint) return false;
@@ -1856,12 +1856,12 @@
                 renderApp();
                 document.getElementById('sheet-sync-error').classList.add('hidden');
                 const timestamp = new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
-                if (status) status.textContent = `Totalurile au fost actualizate la ${timestamp}.`;
-                if (showSuccess) showToast('Totalurile proiectelor au fost sincronizate.');
+                if (status) status.textContent = `Totalurile și datele ultimei donații au fost actualizate la ${timestamp}.`;
+                if (showSuccess) showToast('Totalurile și datele ultimei donații au fost sincronizate.');
                 return true;
             } catch (error) {
                 console.error('Sincronizarea totalurilor Google Sheets a eșuat:', error);
-                const message = `Totalurile din Google Sheets nu au putut fi actualizate: ${error.message}`;
+                const message = `Datele proiectelor din Google Sheets nu au putut fi actualizate: ${error.message}`;
                 showSheetSyncError(message);
                 if (status) status.textContent = message;
                 if (showSuccess) showToast('Sincronizarea a eșuat. Verifică antetele și numele proiectelor.');
