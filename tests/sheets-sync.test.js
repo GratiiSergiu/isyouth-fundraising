@@ -50,6 +50,9 @@ function makeSheet(name, values) {
         },
         getLastRow() {
             return values.length;
+        },
+        getLastColumn() {
+            return Math.max(0, ...values.map(row => row.length));
         }
     };
 }
@@ -100,51 +103,74 @@ function parseResponse(response, callback) {
     return JSON.parse(response.content);
 }
 
-function makeOutputSheet(rows) {
+function makeOutputSheet(rows, includeLastDonation = true) {
     const values = [
         [],
-        [...Array(14).fill(''), 'Project', 'Total, MDL'],
-        ...rows.map(([project, total]) => [...Array(14).fill(''), project, total])
+        [...Array(14).fill(''), 'Project', 'Total, MDL', ...(includeLastDonation ? ['ultima donație'] : [])],
+        ...rows.map(([project, total, lastDonation]) => [
+            ...Array(14).fill(''),
+            project,
+            total,
+            ...(includeLastDonation ? [lastDonation] : [])
+        ])
     ];
     return makeSheet('OUTPUT - Fundraising Page', values);
 }
 
-test('locates the exact output headers on any tab and returns aggregates only', () => {
+test('reads the OUTPUT donation date and aggregate without exposing private register data', () => {
     const privateRegister = makeSheet('Donations', [
         ['Date', 'Donator', 'Amount', 'CCY', 'Project', 'MDL Amount'],
-        ['2026-10-01', 'Private Donor', 100, 'MDL', 'Project A', 100],
-        ['2026-10-22', 'Another Private Donor', 25, 'MDL', 'Project A', 25],
-        ['2026-10-18', 'Third Private Donor', 50, 'MDL', 'Project B', 50]
+        ['not an OUTPUT date', 'Private Donor', 100, 'MDL', 'Project A', 100],
+        ['not an OUTPUT date', 'Another Private Donor', 25, 'MDL', 'Project A', 25],
+        ['not an OUTPUT date', 'Third Private Donor', 50, 'MDL', 'Project B', 50]
     ]);
-    const output = makeOutputSheet([['Project A', 1250], ['Project B', 0]]);
+    const output = makeOutputSheet([
+        ['Project A', 1250, '2026-10-24'],
+        ['Project B', 0, '2026-10-20']
+    ]);
     const callback = 'window.result';
     const result = parseResponse(callEndpoint([privateRegister, output], { callback }), callback);
 
     assert.deepEqual(result, [
-        { project: 'Project A', totalMdl: 1250, lastDonation: '2026-10-22' },
-        { project: 'Project B', totalMdl: 0, lastDonation: '2026-10-18' }
+        { project: 'Project A', totalMdl: 1250, lastDonation: '2026-10-24' },
+        { project: 'Project B', totalMdl: 0, lastDonation: '2026-10-20' }
     ]);
     assert.equal(JSON.stringify(result).includes('Private Donor'), false);
     assert.deepEqual(Object.keys(result[0]), ['project', 'totalMdl', 'lastDonation']);
     assert.equal(result.some(row => Object.keys(row).some(key => /donor|amount|ccy/i.test(key))), false);
 });
 
-test('returns an empty donation date when no private register date table exists', () => {
+test('returns an empty donation date when the OUTPUT date cell is blank', () => {
     const result = parseResponse(callEndpoint([makeOutputSheet([['Project A', 100]])]));
     assert.deepEqual(result, [{ project: 'Project A', totalMdl: 100, lastDonation: '' }]);
 });
 
 test('uses spreadsheet-local dates from Google Sheets date cells', () => {
     const spreadsheetDate = vm.runInNewContext('new Date("2026-10-24T20:00:00.000Z")');
-    const register = makeSheet('Donations', [
-        ['Date', 'Donator', 'Amount', 'CCY', 'Project', 'MDL Amount'],
-        [spreadsheetDate, 'Private Donor', 100, 'MDL', 'Project A', 100]
-    ]);
 
     assert.deepEqual(
-        parseResponse(callEndpoint([register, makeOutputSheet([['Project A', 100]])])),
+        parseResponse(callEndpoint([makeOutputSheet([['Project A', 100, spreadsheetDate]])])),
         [{ project: 'Project A', totalMdl: 100, lastDonation: '2026-10-24' }]
     );
+});
+
+test('continues to serve aggregate totals for an older OUTPUT table without a date column', () => {
+    assert.deepEqual(
+        parseResponse(callEndpoint([makeOutputSheet([['Project A', 100]], false)])),
+        [{ project: 'Project A', totalMdl: 100, lastDonation: '' }]
+    );
+});
+
+test('rejects invalid dates and duplicate OUTPUT date headers', () => {
+    assert.match(
+        parseResponse(callEndpoint([makeOutputSheet([['Project A', 100, 'not a date']])])).error,
+        /Data donației/
+    );
+    const duplicateDateHeader = makeSheet('OUTPUT', [
+        ['Project', 'Total, MDL', 'ultima donație', 'Ultima donație'],
+        ['Project A', 100, '2026-10-24', '2026-10-24']
+    ]);
+    assert.match(parseResponse(callEndpoint([duplicateDateHeader])).error, /mai multe coloane/);
 });
 
 test('requires one uniquely detected output table', () => {
@@ -184,11 +210,11 @@ test('validates aggregate shape, exact project matching, and all site totals bef
     ];
     const updated = applyTotals(projects, [
         { project: 'Project A', totalMdl: 125, lastDonation: '2026-10-25' },
-        { project: 'Project B', totalMdl: 0, lastDonation: '' }
+        { project: 'Project B', totalMdl: 0, lastDonation: '2026-10-23' }
     ]);
     assert.deepEqual(updated.map(project => project.raised), [125, 0]);
     assert.equal(updated[0].lastDonation, '25 octombrie 2026');
-    assert.equal(updated[1].lastDonation, undefined);
+    assert.equal(updated[1].lastDonation, '23 octombrie 2026');
     assert.deepEqual(projects.map(project => project.raised), [10, 20]);
 
     assert.throws(
