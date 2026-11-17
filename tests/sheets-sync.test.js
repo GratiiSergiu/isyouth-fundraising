@@ -252,6 +252,20 @@ test('keeps stored donation dates when an older endpoint only returns totals', (
     assert.equal(updated.lastDonation, '23 octombrie 2026');
 });
 
+test('does not require or overwrite Google Sheets totals for Coming Soon projects', () => {
+    const projects = [
+        { id: 'a', title: 'Fundraising project', status: 'active', raised: 10 },
+        { id: 'b', title: 'Mystery proposal', status: 'comingSoon', raised: 0 }
+    ];
+    const [updatedFundraising, updatedComingSoon] = applyTotals(projects, [
+        { project: 'Fundraising project', totalMdl: 125 }
+    ]);
+
+    assert.equal(updatedFundraising.raised, 125);
+    assert.equal(updatedComingSoon.raised, 0);
+    assert.equal(updatedComingSoon.status, 'comingSoon');
+});
+
 test('accepts only the Apps Script deployment URL format', () => {
     assert.equal(isAppsScriptEndpoint('https://script.google.com/macros/s/Abc_123-xyz/exec'), true);
     assert.equal(isAppsScriptEndpoint('https://example.com/macros/s/Abc/exec'), false);

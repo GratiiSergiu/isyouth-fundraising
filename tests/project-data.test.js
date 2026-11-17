@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { canReceiveDonations, normalizeProjects } = require('../project-data.js');
+const { canReceiveDonations, isComingSoonProject, normalizeProjects } = require('../project-data.js');
 
 test('copies legacy descriptions into both new project description fields', () => {
     const legacyProject = {
@@ -47,6 +47,13 @@ test('rejects invalid project data instead of silently dropping it', () => {
 test('only active projects can receive donations', () => {
     assert.equal(canReceiveDonations({ status: 'active' }), true);
     assert.equal(canReceiveDonations({ status: 'completed' }), false);
+    assert.equal(canReceiveDonations({ status: 'comingSoon' }), false);
     assert.equal(canReceiveDonations({ status: 'paused' }), false);
     assert.equal(canReceiveDonations(null), false);
+});
+
+test('identifies Coming Soon projects without changing existing project data', () => {
+    assert.equal(isComingSoonProject({ status: 'comingSoon' }), true);
+    assert.equal(isComingSoonProject({ status: 'active' }), false);
+    assert.equal(isComingSoonProject(null), false);
 });

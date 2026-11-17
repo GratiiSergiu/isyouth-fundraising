@@ -63,18 +63,25 @@
             siteProjectNames.add(project.title);
         });
 
-        const missingProjects = projects.filter(project => !totalsByProject.has(project.title));
+        const fundraisingProjects = projects.filter(project => !isComingSoonProject(project));
+        const missingProjects = fundraisingProjects.filter(project => !totalsByProject.has(project.title));
         if (missingProjects.length) {
             throw new Error(`Lipsesc totaluri Google Sheets pentru: ${missingProjects.map(project => `„${project.title}”`).join(', ')}.`);
         }
 
         return projects.map(project => ({
             ...project,
-            raised: totalsByProject.get(project.title).totalMdl,
-            ...(totalsByProject.get(project.title).lastDonation
-                ? { lastDonation: formatDonationDate(totalsByProject.get(project.title).lastDonation) }
-                : {})
+            ...(isComingSoonProject(project) ? {} : {
+                raised: totalsByProject.get(project.title).totalMdl,
+                ...(totalsByProject.get(project.title).lastDonation
+                    ? { lastDonation: formatDonationDate(totalsByProject.get(project.title).lastDonation) }
+                    : {})
+            })
         }));
+    }
+
+    function isComingSoonProject(project) {
+        return Boolean(project && project.status === 'comingSoon');
     }
 
     function isIsoDate(value) {

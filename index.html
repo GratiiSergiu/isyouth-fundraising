@@ -219,6 +219,10 @@
                             <i class="fa-solid fa-plus-circle"></i>
                             <span>Adaugă Proiect Nou</span>
                         </button>
+                        <button onclick="openNewProjectModal('comingSoon')" class="px-4 py-2.5 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-400/30 font-bold rounded-xl text-sm transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Adaugă Coming Soon</span>
+                        </button>
                         <button onclick="resetToDefaults()" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">
                             Resetare Proiecte
                         </button>
@@ -330,6 +334,17 @@
             </div>
         </section>
 
+        <section id="coming-soon-section" class="hidden py-16 bg-gradient-to-b from-slate-950 via-fuchsia-950/10 to-slate-950 border-y border-fuchsia-500/10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-12">
+                    <span class="px-3.5 py-1 bg-fuchsia-500/10 border border-fuchsia-400/20 text-fuchsia-200 font-bold text-xs uppercase tracking-wider rounded-full">Coming Soon</span>
+                    <h2 class="text-3xl font-extrabold text-white mt-3">Ceva nou se pregătește</h2>
+                    <p class="text-slate-400 mt-2">Avem idei noi pentru comunitate. Revino curând ca să afli mai multe.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="coming-soon-grid"></div>
+            </div>
+        </section>
+
         <!-- Completed Projects Section -->
         <section class="py-16 bg-slate-900/50 border-t border-slate-800/80">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -437,23 +452,25 @@
                     <input type="text" id="edit-title" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none">
                 </div>
 
-                <div>
+                <div id="edit-short-description-field">
                     <label for="edit-short-description" class="block text-xs font-bold text-slate-300 uppercase mb-1">Text scurt pentru card</label>
-                    <textarea id="edit-short-description" rows="2" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none"></textarea>
+                    <textarea id="edit-short-description" rows="2" required placeholder="ex. Avem pregătită o surpriză pentru comunitate..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none"></textarea>
                 </div>
 
-                <div>
+                <div id="edit-full-description-field">
                     <label for="edit-full-description" class="block text-xs font-bold text-slate-300 uppercase mb-1">Descriere completă a proiectului</label>
                     <textarea id="edit-full-description" rows="6" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none"></textarea>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="col-span-2">
-                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Țintă (MDL)</label>
-                        <input type="number" id="edit-target" required min="100" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none font-bold text-emerald-400">
+                <div id="edit-fundraising-fields">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Țintă (MDL)</label>
+                            <input type="number" id="edit-target" required min="100" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none font-bold text-emerald-400">
+                        </div>
                     </div>
+                    <p class="mt-2 text-xs text-slate-400">Suma strânsă este preluată din tabelul de totaluri Google Sheets. Titlul trebuie să corespundă exact cu numele proiectului din tabel.</p>
                 </div>
-                <p class="text-xs text-slate-400">Suma strânsă este preluată din tabelul de totaluri Google Sheets. Titlul trebuie să corespundă exact cu numele proiectului din tabel.</p>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -465,9 +482,11 @@
                         <select id="edit-status" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-fuchsia-500 focus:outline-none">
                             <option value="active">În Curs (Activ)</option>
                             <option value="completed">Livrat / Finalizat</option>
+                            <option value="comingSoon">Coming Soon (Teaser)</option>
                         </select>
                     </div>
                 </div>
+                <p id="coming-soon-edit-help" class="hidden text-xs text-fuchsia-200">Propunerile Coming Soon nu au țintă și nu acceptă donații. Poți publica doar titlul, iar textele și imaginea le poți completa sau modifica oricând.</p>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-300 uppercase mb-1">URL Imagine Representativă</label>
@@ -537,7 +556,7 @@
                     </div>
                 </section>
             </div>
-            <div class="p-4 sm:px-8 sm:py-5 border-t border-slate-800 bg-slate-900">
+            <div id="project-details-actions" class="p-4 sm:px-8 sm:py-5 border-t border-slate-800 bg-slate-900">
                 <button id="project-details-support" type="button" onclick="supportProjectDetails()" class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-slate-800 hover:bg-fuchsia-600 text-white transition-all duration-200 flex items-center justify-center space-x-2 border border-slate-700/60 shadow-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-400">
                     <i class="fa-solid fa-heart text-rose-500" aria-hidden="true"></i>
                     <span>Susține Acest Proiect</span>
@@ -705,7 +724,10 @@
             window.setInterval(() => syncSheetTotals(false), sheetSyncIntervalMs);
         };
 
-        document.getElementById('edit-status').addEventListener('change', renderProjectGalleryEditor);
+        document.getElementById('edit-status').addEventListener('change', () => {
+            updateProjectFormForStatus();
+            renderProjectGalleryEditor();
+        });
         document.getElementById('edit-gallery-add-url').addEventListener('click', addGalleryImageUrl);
 
         function loadLocalData() {
@@ -1227,31 +1249,39 @@
 
         function renderApp() {
             const activeContainer = document.getElementById('active-projects-grid');
+            const comingSoonContainer = document.getElementById('coming-soon-grid');
+            const comingSoonSection = document.getElementById('coming-soon-section');
             const completedContainer = document.getElementById('completed-projects-grid');
             const adminTableBody = document.getElementById('admin-table-body');
 
             activeContainer.innerHTML = '';
+            comingSoonContainer.innerHTML = '';
             completedContainer.innerHTML = '';
             adminTableBody.innerHTML = '';
 
             let totalRaisedAll = 0;
             let activeCount = 0;
             let completedCount = 0;
+            let comingSoonCount = 0;
 
             projects.forEach((project, index) => {
-                totalRaisedAll += Number(project.raised);
-                const percent = Math.min(100, Math.round((project.raised / project.target) * 100));
-
-                if (project.status === 'active') {
+                if (window.ISYOUTH_PROJECTS.isComingSoonProject(project)) {
+                    comingSoonCount++;
+                    comingSoonContainer.appendChild(createComingSoonCard(project));
+                } else if (project.status === 'active') {
+                    totalRaisedAll += Number(project.raised);
                     activeCount++;
+                    const percent = Math.min(100, Math.round((project.raised / project.target) * 100));
                     activeContainer.appendChild(createActiveProjectCard(project, percent));
                 } else {
+                    totalRaisedAll += Number(project.raised);
                     completedCount++;
                     completedContainer.appendChild(createCompletedProjectCard(project));
                 }
 
                 adminTableBody.appendChild(createAdminRow(project, index));
             });
+            comingSoonSection.classList.toggle('hidden', comingSoonCount === 0);
 
             document.getElementById('stat-total').innerText = `${formatMdl(totalRaisedAll)} MDL`;
             document.getElementById('stat-active').innerText =
@@ -1316,6 +1346,49 @@
             return card;
         }
 
+        function createComingSoonCard(project) {
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.onclick = () => openProjectDetails(project.id);
+            card.setAttribute('aria-label', `Descoperă teaserul: ${project.title}`);
+            card.className = 'w-full text-left bg-slate-900/80 rounded-3xl overflow-hidden border border-fuchsia-500/20 shadow-xl flex flex-col card-glow transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400';
+
+            const visual = document.createElement('div');
+            visual.className = 'relative h-48 overflow-hidden bg-gradient-to-br from-fuchsia-950 via-slate-900 to-indigo-950 flex items-center justify-center';
+            if (project.image) {
+                const image = document.createElement('img');
+                image.src = project.image;
+                image.alt = '';
+                image.onerror = () => image.remove();
+                image.className = 'absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-500';
+                visual.appendChild(image);
+            }
+            const glow = document.createElement('div');
+            glow.className = 'absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-fuchsia-500/10';
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid fa-wand-magic-sparkles relative text-5xl text-fuchsia-200/90 drop-shadow-[0_0_24px_rgba(217,70,239,0.6)]';
+            icon.setAttribute('aria-hidden', 'true');
+            const badge = document.createElement('span');
+            badge.className = 'absolute top-4 left-4 px-3 py-1 bg-slate-950/80 backdrop-blur-md text-fuchsia-100 text-xs font-black rounded-full border border-fuchsia-300/30';
+            badge.textContent = 'COMING SOON';
+            visual.append(glow, icon, badge);
+
+            const details = document.createElement('div');
+            details.className = 'p-6 flex flex-col flex-1';
+            const title = document.createElement('h3');
+            title.className = 'text-xl font-extrabold text-white group-hover:text-fuchsia-300 transition-colors leading-snug';
+            title.textContent = project.title;
+            const teaser = document.createElement('p');
+            teaser.className = 'text-slate-300 text-sm mt-2.5 line-clamp-3 leading-relaxed';
+            teaser.textContent = project.shortDescription || 'Mai multe detalii în curând.';
+            const hint = document.createElement('span');
+            hint.className = 'inline-block mt-5 text-xs font-bold text-fuchsia-200';
+            hint.textContent = 'Descoperă teaserul';
+            details.append(title, teaser, hint);
+            card.append(visual, details);
+            return card;
+        }
+
         function createCompletedProjectCard(project) {
             const card = document.createElement('div');
             card.className = "bg-slate-900/90 rounded-3xl overflow-hidden border border-slate-800 shadow-xl flex flex-col card-glow transition-all duration-300 group";
@@ -1364,17 +1437,22 @@
         function createAdminRow(project, index) {
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-800/40";
+            const comingSoon = window.ISYOUTH_PROJECTS.isComingSoonProject(project);
+            const statusClass = comingSoon
+                ? 'bg-fuchsia-500/10 text-fuchsia-200 border border-fuchsia-500/30'
+                : project.status === 'active'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30';
+            const statusLabel = comingSoon ? 'Coming Soon' : project.status === 'active' ? 'Activ' : 'Livrat';
             tr.innerHTML = `
                 <td class="p-3">
-                    <img src="${project.image}" class="w-10 h-10 rounded-lg object-cover bg-slate-800">
+                    <img src="${project.image || 'https://placehold.co/80x80/1e293b/ffffff?text=ISY'}" alt="" class="w-10 h-10 rounded-lg object-cover bg-slate-800">
                 </td>
                 <td class="p-3 font-bold text-white">${project.title}</td>
-                <td class="p-3 text-emerald-400 font-bold">${formatMdl(project.target)} MDL</td>
-                <td class="p-3 text-fuchsia-400 font-bold">${formatMdl(project.raised)} MDL</td>
+                <td class="p-3 text-emerald-400 font-bold">${comingSoon ? '—' : `${formatMdl(project.target)} MDL`}</td>
+                <td class="p-3 text-fuchsia-400 font-bold">${comingSoon ? '—' : `${formatMdl(project.raised)} MDL`}</td>
                 <td class="p-3">
-                    <span class="px-2 py-1 text-xs font-bold rounded-full ${project.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'}">
-                        ${project.status === 'active' ? 'Activ' : 'Livrat'}
-                    </span>
+                    <span class="px-2 py-1 text-xs font-bold rounded-full ${statusClass}">${statusLabel}</span>
                 </td>
                 <td class="p-3 text-right space-x-2">
                     <button onclick="editProjectModal('${project.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg border border-slate-700">
@@ -1421,24 +1499,48 @@
             document.getElementById('edit-image').value = proj.image;
             document.getElementById('edit-gallery-enabled').checked = proj.galleryEnabled === true;
             document.getElementById('edit-gallery-image-url').value = '';
+            updateProjectFormForStatus();
             renderProjectGalleryEditor();
 
             document.getElementById('modal-edit-project').classList.remove('hidden');
         }
 
-        function openNewProjectModal() {
+        function openNewProjectModal(status = 'active') {
             projectGalleryDraft = [];
-            document.getElementById('edit-modal-title').innerText = "Adaugă Proiect Nou ISYouth";
+            document.getElementById('edit-modal-title').innerText = status === 'comingSoon'
+                ? 'Adaugă propunere Coming Soon'
+                : 'Adaugă Proiect Nou ISYouth';
             document.getElementById('edit-project-id').value = "new_" + Date.now();
             document.getElementById('edit-project-form').reset();
             document.getElementById('edit-target').value = 3000;
-            document.getElementById('edit-category').value = "ISYouth";
-            document.getElementById('edit-status').value = "active";
-            document.getElementById('edit-image').value = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80";
+            document.getElementById('edit-category').value = status === 'comingSoon' ? 'Coming Soon' : 'ISYouth';
+            document.getElementById('edit-status').value = status;
+            document.getElementById('edit-image').value = status === 'comingSoon'
+                ? ''
+                : 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80';
             document.getElementById('edit-gallery-image-url').value = '';
+            updateProjectFormForStatus();
             renderProjectGalleryEditor();
 
             document.getElementById('modal-edit-project').classList.remove('hidden');
+        }
+
+        function updateProjectFormForStatus() {
+            const comingSoon = document.getElementById('edit-status').value === 'comingSoon';
+            const target = document.getElementById('edit-target');
+            const category = document.getElementById('edit-category');
+            document.getElementById('edit-fundraising-fields').classList.toggle('hidden', comingSoon);
+            document.getElementById('coming-soon-edit-help').classList.toggle('hidden', !comingSoon);
+            document.getElementById('edit-short-description').required = !comingSoon;
+            document.getElementById('edit-full-description').required = !comingSoon;
+            target.required = !comingSoon;
+            target.disabled = comingSoon;
+            category.disabled = comingSoon;
+            if (comingSoon) {
+                category.value = 'Coming Soon';
+            } else if (category.value === 'Coming Soon') {
+                category.value = 'General';
+            }
         }
 
         function closeEditModal() {
@@ -1467,21 +1569,28 @@
 
         async function persistProjectForm() {
             const id = document.getElementById('edit-project-id').value;
-            const title = document.getElementById('edit-title').value;
+            const title = document.getElementById('edit-title').value.trim();
             const shortDescription = document.getElementById('edit-short-description').value.trim();
             const fullDescription = document.getElementById('edit-full-description').value.trim();
-            const target = Number(document.getElementById('edit-target').value);
-            const category = document.getElementById('edit-category').value;
             const status = document.getElementById('edit-status').value;
+            const comingSoon = status === 'comingSoon';
+            const category = comingSoon ? 'Coming Soon' : document.getElementById('edit-category').value;
             const image = document.getElementById('edit-image').value;
 
-            if (!shortDescription || !fullDescription) {
+            if (!title) {
+                showToast("Adaugă un titlu pentru proiect.");
+                return;
+            }
+            if (!comingSoon && (!shortDescription || !fullDescription)) {
                 showToast("Completează atât textul scurt pentru card, cât și descrierea completă.");
                 return;
             }
 
             const existingIndex = projects.findIndex(p => p.id === id);
             const existingProject = existingIndex === -1 ? null : projects[existingIndex];
+            const target = comingSoon
+                ? (existingProject && Number.isFinite(existingProject.target) ? existingProject.target : 0)
+                : Number(document.getElementById('edit-target').value);
             const hasNewGalleryImages = projectGalleryDraft.some(galleryImage => galleryImage.isNew);
             if (hasNewGalleryImages && status !== 'completed') {
                 showToast("Fotografiile galeriei pot fi salvate doar pentru proiecte finalizate.");
@@ -1504,7 +1613,7 @@
                 galleryEnabled = document.getElementById('edit-gallery-enabled').checked;
             }
 
-            const raised = existingIndex === -1 ? 0 : projects[existingIndex].raised;
+            const raised = comingSoon ? 0 : existingIndex === -1 ? 0 : projects[existingIndex].raised;
             const today = new Date().toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' });
 
             if (existingIndex !== -1) {
@@ -1512,7 +1621,9 @@
                     ...projects[existingIndex],
                     title, shortDescription, fullDescription, description: fullDescription, target, raised, category, status, image,
                     ...(status === 'completed' ? { gallery, galleryEnabled } : {}),
-                    lastDonation: raised > projects[existingIndex].raised ? today : projects[existingIndex].lastDonation
+                    lastDonation: comingSoon
+                        ? ''
+                        : raised > projects[existingIndex].raised ? today : projects[existingIndex].lastDonation
                 };
             } else {
                 projects.unshift({
@@ -1608,10 +1719,11 @@
             projectDetailsProjectId = project.id;
             document.getElementById('project-details-content').scrollTop = 0;
             document.getElementById('project-details-title').textContent = project.title;
-            document.getElementById('project-details-category').textContent = project.category || 'Proiect ISYouth';
+            document.getElementById('project-details-category').textContent =
+                window.ISYOUTH_PROJECTS.isComingSoonProject(project) ? 'Coming Soon' : project.category || 'Proiect ISYouth';
             document.getElementById('project-details-teaser').textContent = project.shortDescription;
             document.getElementById('project-details-description').textContent = project.fullDescription;
-            document.getElementById('project-details-support').classList.toggle(
+            document.getElementById('project-details-actions').classList.toggle(
                 'hidden',
                 !window.ISYOUTH_PROJECTS.canReceiveDonations(project)
             );
@@ -1703,7 +1815,9 @@
         function openDonateModal(id) {
             const proj = projects.find(p => p.id === id);
             if (!window.ISYOUTH_PROJECTS.canReceiveDonations(proj)) {
-                if (proj && proj.status === 'completed') {
+                if (window.ISYOUTH_PROJECTS.isComingSoonProject(proj)) {
+                    showToast("Această propunere nu acceptă donații încă.");
+                } else if (proj && proj.status === 'completed') {
                     showToast("Acest proiect a fost finalizat și nu mai acceptă donații.");
                 }
                 return;

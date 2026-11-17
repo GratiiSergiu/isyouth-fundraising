@@ -12,6 +12,10 @@ Site static publicat pe GitHub Pages. Proiectele și datele de contact sunt citi
 
 Numai conturile cu document de administrator activ pot modifica documentul comun `appData/state`. Vizitatorii pot doar să citească proiectele și contactele publice. Un cont neaprobat care pornește autentificarea va fi deconectat automat și nu va putea accesa panoul sau modifica date. Nu crea documente de administrator pentru conturi neaprobate. Regulile Firestore sunt măsura de securitate efectivă; ascunderea panoului în interfață nu înlocuiește aceste reguli.
 
+## Propuneri Coming Soon
+
+Administratorii pot folosi **Adaugă Coming Soon** pentru a publica o propunere misterioasă fără țintă financiară sau opțiune de donație. Titlul este suficient pentru publicare; textul scurt, descrierea completă și imaginea pot fi adăugate ori schimbate ulterior din **Editează**. Cardurile apar într-o secțiune separată „Coming Soon”, iar propunerile pot fi șterse din lista de administrare. Aceste înregistrări nu intră în totalurile sau în sincronizarea Google Sheets; pentru lansarea unei inițiative, schimbă statusul în **În Curs (Activ)** și completează descrierile și ținta.
+
 ## Galerie foto pentru proiecte finalizate
 
 Galeria este opțională și se activează separat din editarea unui proiect cu status **Livrat / Finalizat**. Este destinată proiectelor cu etape vizibile (de exemplu reparații sau renovări), nu achizițiilor obișnuite; proiectele active nu afișează cronologii, chiar dacă date vechi au rămas în document. Pentru a adăuga o fotografie, copiază URL-ul HTTPS al imaginii din Imgix (un subdomeniu de forma `nume-sursă.imgix.net`) și lipește-l în câmpul galeriei. Sunt acceptate maximum 12 URL-uri per proiect; eticheta etapei/perioadei și data sunt opționale, iar butoanele săgeată stabilesc ordinea de afișare. Poți edita URL-urile existente sau elimina fotografii, apoi salvezi proiectul.
