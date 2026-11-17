@@ -36,5 +36,9 @@
         return Boolean(project && project.status === 'active');
     }
 
-    return { normalizeProjects, canReceiveDonations };
+    function isComingSoonProject(project) {
+        return Boolean(project && project.status === 'comingSoon');
+    }
+
+    return { normalizeProjects, canReceiveDonations, isComingSoonProject };
 });
