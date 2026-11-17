@@ -1360,18 +1360,17 @@
                 image.src = project.image;
                 image.alt = '';
                 image.onerror = () => image.remove();
-                image.className = 'absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-500';
+                image.className = 'absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500';
                 visual.appendChild(image);
+            } else {
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-wand-magic-sparkles text-5xl text-fuchsia-200/90 drop-shadow-[0_0_24px_rgba(217,70,239,0.6)]';
+                icon.setAttribute('aria-hidden', 'true');
+                visual.appendChild(icon);
             }
-            const glow = document.createElement('div');
-            glow.className = 'absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-fuchsia-500/10';
-            const icon = document.createElement('i');
-            icon.className = 'fa-solid fa-wand-magic-sparkles relative text-5xl text-fuchsia-200/90 drop-shadow-[0_0_24px_rgba(217,70,239,0.6)]';
-            icon.setAttribute('aria-hidden', 'true');
             const badge = document.createElement('span');
-            badge.className = 'absolute top-4 left-4 px-3 py-1 bg-slate-950/80 backdrop-blur-md text-fuchsia-100 text-xs font-black rounded-full border border-fuchsia-300/30';
+            badge.className = 'mb-3 inline-flex w-fit px-3 py-1 bg-fuchsia-500/10 text-fuchsia-200 text-[11px] font-black tracking-wider rounded-full border border-fuchsia-400/20';
             badge.textContent = 'COMING SOON';
-            visual.append(glow, icon, badge);
 
             const details = document.createElement('div');
             details.className = 'p-6 flex flex-col flex-1';
@@ -1384,7 +1383,7 @@
             const hint = document.createElement('span');
             hint.className = 'inline-block mt-5 text-xs font-bold text-fuchsia-200';
             hint.textContent = 'Descoperă teaserul';
-            details.append(title, teaser, hint);
+            details.append(badge, title, teaser, hint);
             card.append(visual, details);
             return card;
         }
